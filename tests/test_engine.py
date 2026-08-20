@@ -1,0 +1,58 @@
+import json
+
+import pytest
+
+from src.marketmap.engine import MapError, generate
+
+BODY = {"core_shape": "building believable real-time systems under limits",
+        "pools": [
+          {"name": "Procedural generation", "transfer_logic": "same real-time systems work",
+           "companies": ["Rockstar"], "titles": ["Technical Artist"],
+           "signals": ["Houdini"], "tells": ["Student"], "obviousness": 1, "confidence": 0.9},
+          {"name": "Obvious pool", "transfer_logic": "the same job elsewhere",
+           "titles": ["Simulation Engineer"], "obviousness": 5, "confidence": 0.9}]}
+
+
+def fake(payload):
+    return lambda p, *, system=None, **k: (
+        payload if isinstance(payload, str) else json.dumps(payload))
+
+
+def test_builds_a_map():
+    m = generate("Simulation Engineer", "x"*50, complete=fake(BODY))
+    assert m.core_shape.startswith("building believable")
+    assert len(m.pools) == 2
+
+
+def test_non_obvious_filters_out_the_pools_everyone_searches():
+    m = generate("Simulation Engineer", "x"*50, complete=fake(BODY))
+    assert [p.name for p in m.non_obvious] == ["Procedural generation"]
+
+
+def test_clamps_out_of_range_obviousness():
+    body = {"core_shape": "s", "pools": [
+        {"name": "p", "transfer_logic": "l", "obviousness": 99, "confidence": 5.0}]}
+    p = generate("t", "x"*50, complete=fake(body)).pools[0]
+    assert p.obviousness == 5 and p.confidence == 1.0
+
+
+def test_drops_a_pool_with_no_transfer_logic():
+    body = {"core_shape": "s", "pools": [
+        {"name": "p", "transfer_logic": "  "},
+        {"name": "q", "transfer_logic": "real"}]}
+    assert [p.name for p in generate("t", "x"*50, complete=fake(body)).pools] == ["q"]
+
+
+def test_raises_without_core_shape():
+    with pytest.raises(MapError):
+        generate("t", "x"*50, complete=fake({"pools": [{"name":"p","transfer_logic":"l"}]}))
+
+
+def test_raises_when_no_pools_survive():
+    with pytest.raises(MapError):
+        generate("t", "x"*50, complete=fake({"core_shape": "s", "pools": []}))
+
+
+def test_raises_on_non_json():
+    with pytest.raises(MapError):
+        generate("t", "x"*50, complete=fake("I cannot help with that"))
