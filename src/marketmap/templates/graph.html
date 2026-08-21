@@ -1,0 +1,250 @@
+<title>__TITLE__</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap">
+<style>
+:root{
+  --void:#05080D; --void-2:#0A1018; --panel:#0E1621; --rule:#1E2C3B;
+  --ink:#DCE6F0; --ink-2:#93A5B8; --ink-3:#5D7086;
+  --verd:#3FE0C4; --verd-dim:#1B6B5E; --amber:#F2A23C; --sig:#FF6B57;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--void);color:var(--ink);overflow:hidden;
+  font-family:"IBM Plex Sans Condensed",system-ui,sans-serif;
+}
+canvas{display:block;position:fixed;inset:0}
+.hud{position:fixed;pointer-events:none;z-index:5}
+#top{top:0;left:0;right:0;padding:20px 24px;
+  background:linear-gradient(180deg,rgba(5,8,13,.92),rgba(5,8,13,0));}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--verd);margin-bottom:6px}
+h1{font-size:clamp(19px,3.2vw,27px);font-weight:700;margin:0;letter-spacing:-.01em;line-height:1.15}
+#top .sub{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);margin-top:7px}
+#legend{bottom:0;left:0;padding:18px 24px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  color:var(--ink-3);display:flex;gap:18px;flex-wrap:wrap;align-items:center;
+  background:linear-gradient(0deg,rgba(5,8,13,.92),rgba(5,8,13,0));right:0}
+.key{display:flex;align-items:center;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+#panel{
+  position:fixed;top:0;right:0;bottom:0;width:min(400px,88vw);z-index:10;
+  background:var(--panel);border-left:1px solid var(--rule);
+  transform:translateX(101%);transition:transform .34s cubic-bezier(.22,.7,.3,1);
+  overflow-y:auto;padding:26px 26px 60px;
+}
+#panel.open{transform:none}
+#panel h2{font-size:22px;margin:14px 0 4px;line-height:1.15;text-wrap:balance}
+#panel .tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--verd)}
+#panel .why{font-size:15px;line-height:1.6;color:var(--ink-2);
+  border-left:2px solid var(--verd-dim);padding-left:14px;margin:18px 0 22px}
+#panel .lbl{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-3);display:block;margin:18px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:11px;padding:4px 9px;
+  border:1px solid var(--rule);background:var(--void-2);color:var(--ink-2)}
+.chip.out{border-color:#4A2620;color:var(--sig);background:#1A0F0D}
+pre{font-family:"IBM Plex Mono",monospace;font-size:10.5px;line-height:1.6;
+  background:var(--void-2);border:1px solid var(--rule);padding:12px;margin:8px 0 0;
+  white-space:pre-wrap;word-break:break-word;color:var(--ink-2);max-height:190px;overflow:auto}
+button{font-family:"IBM Plex Sans Condensed",sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--ink-3);
+  border:1px solid var(--rule);padding:9px 13px;cursor:pointer;transition:.15s;margin-top:10px}
+button:hover{border-color:var(--verd);color:var(--verd)}
+button:focus-visible{outline:2px solid var(--verd);outline-offset:2px}
+#close{position:absolute;top:18px;right:20px;margin:0;padding:6px 11px}
+#hint{position:fixed;bottom:52px;left:24px;z-index:5;font-family:"IBM Plex Mono",monospace;
+  font-size:10.5px;color:var(--ink-3);pointer-events:none;transition:opacity .5s}
+#boot{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:var(--void);font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--verd);transition:opacity .6s}
+#boot.gone{opacity:0;pointer-events:none}
+#boot span{animation:bp 1.4s ease-in-out infinite}
+@keyframes bp{0%,100%{opacity:.35}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){#boot span{animation:none}}
+</style>
+<div id="boot"><span>building graph</span></div>
+<canvas id="cv"></canvas>
+<div class="hud" id="top">
+  <div class="eyebrow">Talent link graph &middot; __POOLCOUNT__ pools &middot; 0 candidate records</div>
+  <h1>__ROLE__</h1>
+  <div class="sub">drag to orbit &middot; scroll to zoom &middot; click any node</div>
+</div>
+<div class="hud" id="legend">
+  <span class="key"><i class="dot" style="background:#F2A23C"></i>the role</span>
+  <span class="key"><i class="dot" style="background:#3FE0C4"></i>talent pool</span>
+  <span class="key"><i class="dot" style="background:#7C8FA3"></i>employer</span>
+  <span class="key">distance from centre = how few recruiters search there</span>
+</div>
+<div id="hint">nothing here was scraped. generated from the job description.</div>
+<aside id="panel" aria-live="polite">
+  <button id="close" type="button">Close</button>
+  <div id="pbody"></div>
+</aside>
+<script>
+/*__MAP_DATA__*/
+"use strict";
+const C={role:"#F2A23C",pool:"#3FE0C4",co:"#7C8FA3",ink:"#DCE6F0",dim:"#7C8FA3"};
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ---- build the graph ------------------------------------------------------
+const nodes=[], edges=[];
+nodes.push({x:0,y:0,z:0,r:17,c:C.role,label:"THE ROLE",kind:"role",font:13,weight:700});
+
+const GOLDEN=Math.PI*(3-Math.sqrt(5));
+POOLS.forEach((p,i)=>{
+  const R=p.o===1?300:215;
+  const t=(i/POOLS.length)*Math.PI*2 + 0.45;
+  const y=Math.sin(GOLDEN*i)*118;
+  const rr=Math.sqrt(Math.max(R*R-y*y,(R*0.55)*(R*0.55)));
+  const pos={x:Math.cos(t)*rr,y:y,z:Math.sin(t)*rr};
+  const pn={...pos,r:10,c:C.pool,label:p.n,kind:"pool",data:p,font:12.5,weight:600};
+  nodes.push(pn); edges.push({a:nodes[0],b:pn,c:C.pool,w:1.1,o:0.55});
+  p.co.forEach((cname,j)=>{
+    const a=(j/p.co.length)*Math.PI*2+i*1.3;
+    const cn={x:pos.x+Math.cos(a)*76,y:pos.y+Math.sin(a*1.7)*38,z:pos.z+Math.sin(a)*76,
+      r:4.2,c:C.co,label:cname,kind:"co",parent:p,font:10,weight:400,mono:true};
+    nodes.push(cn); edges.push({a:pn,b:cn,c:C.co,w:0.8,o:0.34});
+  });
+});
+const stars=[];
+for(let i=0;i<420;i++){const r=900+Math.random()*900,th=Math.random()*6.283,ph=Math.acos(2*Math.random()-1);
+  stars.push({x:r*Math.sin(ph)*Math.cos(th),y:r*Math.cos(ph),z:r*Math.sin(ph)*Math.sin(th)});}
+
+// ---- projection -----------------------------------------------------------
+const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+let W=0,H=0,DPR=1;
+let yaw=0.7,pitch=0.30,dist=690,spin=reduced?0:0.0016;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+"px";cv.style.height=H+"px";ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener("resize",resize); resize();
+
+function project(p){
+  const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+  let x=p.x*cy-p.z*sy, z=p.x*sy+p.z*cy, y=p.y*cp-z*sp; z=p.y*sp+z*cp;
+  const d=dist-z, f=(H*0.9)/Math.max(d,1);
+  return {sx:W/2+x*f, sy:H/2-y*f, scale:f, depth:d};
+}
+
+// ---- draw -----------------------------------------------------------------
+let hot=null, t=0;
+function frame(now){
+  requestAnimationFrame(frame);
+  if(!dragging) yaw+=spin;
+  t=now||0;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#05080D"; ctx.fillRect(0,0,W,H);
+
+  for(const s of stars){const q=project(s); if(q.depth<=1)continue;
+    ctx.globalAlpha=Math.max(0,Math.min(0.5,q.scale*2.4));
+    ctx.fillStyle="#2A3A4C"; ctx.fillRect(q.sx,q.sy,1.6,1.6);}
+  ctx.globalAlpha=1;
+
+  for(const e of edges){
+    const A=project(e.a),B=project(e.b); if(A.depth<=1||B.depth<=1)continue;
+    const lit = hot && (hot===e.a||hot===e.b);
+    const pulse=0.72+0.28*Math.sin(t*0.0012+e.a.x*0.01);
+    ctx.globalAlpha=(lit?0.95:e.o*pulse)*(hot&&!lit?0.28:1);
+    ctx.strokeStyle=e.c; ctx.lineWidth=(lit?1.9:e.w);
+    ctx.beginPath(); ctx.moveTo(A.sx,A.sy); ctx.lineTo(B.sx,B.sy); ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
+  const drawn=nodes.map(n=>({n,p:project(n)})).filter(o=>o.p.depth>1)
+                   .sort((a,b)=>b.p.depth-a.p.depth);
+  for(const {n,p} of drawn){
+    const lit=(hot===n), dimmed=hot&&!lit&&!(hot.kind==="pool"&&n.parent===hot.data);
+    const rad=n.r*p.scale*(lit?1.55:1);
+    const g=ctx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,Math.max(rad*4.5,2));
+    g.addColorStop(0,n.c); g.addColorStop(0.22,n.c); g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.globalAlpha=dimmed?0.22:(lit?0.55:0.30);
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.sx,p.sy,Math.max(rad*4.5,2),0,6.284); ctx.fill();
+    ctx.globalAlpha=dimmed?0.35:1;
+    ctx.fillStyle=n.c; ctx.beginPath(); ctx.arc(p.sx,p.sy,Math.max(rad,1),0,6.284); ctx.fill();
+    n._sx=p.sx; n._sy=p.sy; n._sr=Math.max(rad,6);
+
+    const active = !hot || hot===n ||
+      (hot.kind==="pool" && n.parent===hot.data) ||
+      (hot.kind==="co" && n.parent===hot.parent);
+    const showLabel = n.kind!=="co" || (hot && active);
+    const fs=n.font*p.scale*11;
+    if(fs>7.5 && showLabel){
+      ctx.globalAlpha=dimmed?0.25:(n.kind==="co"?0.72:1);
+      ctx.font=`${n.weight} ${Math.min(fs,26).toFixed(1)}px ${n.mono?'"IBM Plex Mono",monospace':'"IBM Plex Sans Condensed",sans-serif'}`;
+      ctx.textAlign="center"; ctx.textBaseline="bottom";
+      ctx.fillStyle=n.kind==="role"?C.role:(n.kind==="pool"?C.ink:C.dim);
+      String(n.label).split("\n").forEach((ln,i,arr)=>{
+        ctx.fillText(ln,p.sx,p.sy-rad-8-(arr.length-1-i)*Math.min(fs,26)*1.15);
+      });
+    }
+  }
+  ctx.globalAlpha=1;
+  if(!booted){booted=true;const b=document.getElementById("boot");
+    if(b){b.classList.add("gone");setTimeout(()=>b.remove(),650);}}
+}
+let booted=false;
+requestAnimationFrame(frame);
+
+// ---- interaction ----------------------------------------------------------
+let dragging=false,lx=0,ly=0,moved=0;
+cv.style.cursor="grab";
+cv.addEventListener("pointerdown",e=>{dragging=true;moved=0;lx=e.clientX;ly=e.clientY;
+  cv.setPointerCapture(e.pointerId);cv.style.cursor="grabbing";});
+cv.addEventListener("pointerup",e=>{dragging=false;cv.style.cursor="grab";
+  });
+cv.addEventListener("pointermove",e=>{
+  if(dragging){moved+=Math.abs(e.clientX-lx)+Math.abs(e.clientY-ly);
+    yaw-=(e.clientX-lx)*0.006; pitch=Math.max(-1.25,Math.min(1.25,pitch+(e.clientY-ly)*0.005));
+    lx=e.clientX;ly=e.clientY;return;}
+  const n=hit(e.clientX,e.clientY);
+  if(n!==hot){hot=n;cv.style.cursor=n?"pointer":"grab";}
+});
+// pointer events cover real use; a plain click listener covers browsers and
+// automation that only dispatch mouse events.
+cv.addEventListener("click",e=>{ if(moved>=5)return; const n=hit(e.clientX,e.clientY); if(n)open(n); });
+cv.addEventListener("mousemove",e=>{ if(dragging)return; const n=hit(e.clientX,e.clientY);
+  if(n!==hot){hot=n;cv.style.cursor=n?"pointer":"grab";} });
+cv.addEventListener("wheel",e=>{e.preventDefault();
+  dist=Math.max(240,Math.min(1700,dist*(1+e.deltaY*0.0012)));},{passive:false});
+function hit(mx,my){
+  let best=null,bd=1e9;
+  for(const n of nodes){ if(n._sx===undefined)continue;
+    const d=Math.hypot(mx-n._sx,my-n._sy);
+    if(d<Math.max(n._sr+9,14)&&d<bd){bd=d;best=n;} }
+  return best;
+}
+
+// ---- panel ----------------------------------------------------------------
+const panel=document.getElementById("panel"), pbody=document.getElementById("pbody");
+const chips=(a,cls)=>'<div class="chips">'+a.map(x=>`<span class="chip ${cls||""}">${x}</span>`).join("")+"</div>";
+function open(n){
+  if(n.kind==="role"){
+    pbody.innerHTML=`<div class="tag">The capability under the title</div>
+      <h2>${ROLE_TITLE}</h2><p class="why">${ROLE_SHAPE}</p>
+      <span class="lbl">Pools mapped</span>${chips(POOLS.map(p=>p.n.replace(/\n/g," ")))}`;
+  }else{
+    const p=n.kind==="pool"?n.data:n.parent;
+    pbody.innerHTML=`<div class="tag">${n.kind==="pool"?"Talent pool":"Employer &middot; "+p.n.replace(/\n/g," ")}</div>
+      <h2>${n.kind==="pool"?p.n.replace(/\n/g," "):n.label}</h2>
+      <p class="why">${p.why}</p>
+      <span class="lbl">Where</span>${chips(p.co)}
+      <span class="lbl">What they call themselves</span>${chips(p.ti)}
+      <span class="lbl">Look for</span>${chips(p.sg)}
+      <span class="lbl">Rules them out</span>${chips(p.tl,"out")}
+      <span class="lbl">Google X-ray &mdash; no seat required</span><pre>${p.x}</pre>
+      <button type="button" id="cp">Copy X-ray</button>`;
+    const b=document.getElementById("cp");
+    if(b)b.onclick=()=>{const txt=pbody.querySelector("pre").textContent;
+      const ok=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy X-ray",1500);};
+      if(navigator.clipboard)navigator.clipboard.writeText(txt).then(ok,sel);else sel();
+      function sel(){const r=document.createRange();r.selectNodeContents(pbody.querySelector("pre"));
+        const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Selected";}};
+  }
+  panel.classList.add("open");
+}
+document.getElementById("close").onclick=()=>panel.classList.remove("open");
+addEventListener("keydown",e=>{if(e.key==="Escape")panel.classList.remove("open");});
+const hint=document.getElementById("hint");
+setTimeout(()=>{if(hint)hint.style.opacity="0";},7000);
+setTimeout(()=>{const b=document.getElementById("boot");if(b)b.remove();},2500);
+</script>

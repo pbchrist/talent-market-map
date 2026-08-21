@@ -1,0 +1,22 @@
+{
+  "role_title": "Sim Engineer",
+  "role_text": "a job description here",
+  "core_shape": "shape",
+  "pools": [
+    {
+      "name": "Real-time VFX",
+      "transfer_logic": "same work",
+      "companies": [
+        "Weta FX"
+      ],
+      "titles": [
+        "Pipeline TD"
+      ],
+      "signals": [],
+      "tells": [],
+      "obviousness": 1,
+      "confidence": 0.5
+    }
+  ],
+  "created": "2026-08-20"
+}
