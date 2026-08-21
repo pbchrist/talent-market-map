@@ -58,7 +58,11 @@ function orGroup(a){ const c=[...new Set((a||[]).filter(x=>x&&x.trim()))].map(qu
 function xray(p, site="linkedin.com/in"){
   const parts=[`site:${site}`];
   [orGroup(p.titles), orGroup(p.companies)].forEach(g=>{ if(g) parts.push(g); });
-  const sig=orGroup((p.signals||[]).slice(0,4)); if(sig) parts.push(sig);
+  // Filtered again here: keepSignals lets prose through when a pool has
+  // nothing better so the reader can see it, but it must never reach a
+  // search string.
+  const sig=orGroup((p.signals||[]).filter(isSearchable).slice(0,4));
+  if(sig) parts.push(sig);
   return parts.join(" ");
 }
 function booleanStr(p){ return [orGroup(p.titles), orGroup(p.companies)].filter(Boolean).join(" AND "); }

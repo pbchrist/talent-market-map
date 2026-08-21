@@ -23,6 +23,9 @@ def render(m, show_all: bool = False) -> str:
             out += ["   WHAT THEY CALL THEMSELVES", "   " + ", ".join(p.titles), ""]
         if p.signals:
             out += ["   LOOK FOR", "   " + ", ".join(p.signals), ""]
+        if p.dropped_signals:
+            out += ["   NOT SEARCHABLE, SO NOT USED",
+                    "   " + ", ".join(p.dropped_signals), ""]
         if p.tells:
             out += ["   RULES THEM OUT", "   " + ", ".join(p.tells), ""]
         x = strings.xray(p)

@@ -6,6 +6,8 @@ model asked to emit boolean will quietly drop an OR, unbalance a paren,
 or invent an operator LinkedIn does not have. This cannot.
 """
 
+from src.marketmap.searchable import is_searchable
+
 
 def _quote(term: str) -> str:
     term = term.strip().strip('"')
@@ -31,8 +33,14 @@ def xray(pool, site: str = "linkedin.com/in") -> str:
     for group in (_or_group(pool.titles), _or_group(pool.companies)):
         if group:
             parts.append(group)
-    if pool.signals:
-        parts.append(_or_group(pool.signals[:4]))
+    # Filtered again here, not just at intake. keep() lets prose through when
+    # a pool has nothing better, so the reader can still see what the model
+    # said - but a search string has no such need. An X-ray missing its signal
+    # group is still a good search; one carrying "Real-Time Digital Audio" is
+    # the failure this guards against.
+    usable = [s for s in pool.signals if is_searchable(s)]
+    if usable:
+        parts.append(_or_group(usable[:4]))
     return " ".join(parts)
 
 

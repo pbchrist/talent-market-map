@@ -72,3 +72,33 @@ def test_keep_never_empties_a_pool_that_had_only_prose():
     kept, dropped = keep(["Real-Time Digital Audio", "Systems Engineering"])
     assert kept == ["Real-Time Digital Audio", "Systems Engineering"]
     assert dropped == []
+
+
+# --- the fallback must not leak into search strings ----------------------
+# keep() deliberately returns everything when nothing passes, so a pool is
+# never displayed empty. That is a display decision. An X-ray has no such
+# need: a search missing its signal group is still a valid search, and a
+# search carrying "Real-Time Digital Audio" is the bug this module exists
+# to close.
+
+from src.marketmap.strings import xray
+from src.marketmap.types import Pool
+
+
+def _pool(signals):
+    return Pool(name="Aerospace", transfer_logic="x", companies=["CAE"],
+                titles=["Simulation Systems Engineer"], signals=signals)
+
+
+def test_prose_signals_stay_out_of_the_xray():
+    q = xray(_pool(["Real-Time Digital Audio", "DO-178C"]))
+    assert "DO-178C" in q
+    assert "Real-Time Digital Audio" not in q
+
+
+def test_an_all_prose_pool_yields_an_xray_with_no_signal_group():
+    q = xray(_pool(["Real-Time Digital Audio", "Systems Engineering"]))
+    assert "Real-Time Digital Audio" not in q
+    assert "Systems Engineering" not in q
+    assert q.startswith("site:linkedin.com/in")
+    assert "Simulation Systems Engineer" in q
