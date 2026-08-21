@@ -127,3 +127,11 @@ def test_queries_expand_beyond_the_first_signal():
              signals=["Python/C++ tooling", "USD (OpenUSD)"])
     got = [tok for tok, _ in queries(p)]
     assert "Python" in got and "C++" in got and "OpenUSD" in got
+
+
+def test_every_signal_is_searched_not_just_the_first_few():
+    p = Pool(name="x", transfer_logic="y",
+             signals=["Unreal", "Houdini", "GPU compute", "ray tracing",
+                      "crowd simulation", "Nuke", "OpenUSD", "Katana"])
+    got = [tok for tok, _ in queries(p)]
+    assert len(got) == 8 and "Katana" in got and "Nuke" in got

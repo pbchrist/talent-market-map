@@ -129,7 +129,7 @@ def tokenize(signal: str) -> list[str]:
     return out
 
 
-def queries(pool, max_signals: int = 6) -> list[tuple[str, str]]:
+def queries(pool, max_signals: int = 0) -> list[tuple[str, str]]:
     """Build one repo-search query per searchable token. Returns (token, query)."""
     out = []
     tokens = []
@@ -137,7 +137,11 @@ def queries(pool, max_signals: int = 6) -> list[tuple[str, str]]:
         for t in tokenize(sig):
             if t not in tokens:
                 tokens.append(t)
-    for s in tokens[:max_signals]:
+    # No cap by default. An early version searched the first six tokens and
+    # silently dropped the rest, which on one real pool meant Houdini, GPU
+    # compute, ray tracing and Nuke were never queried at all - exactly the
+    # specific terms most likely to find someone unusual.
+    for s in (tokens[:max_signals] if max_signals else tokens):
         lang = _LANGS.get(s.lower())
         if lang:
             out.append((s, f"/search/repositories?q=language:{lang}"

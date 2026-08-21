@@ -27,6 +27,12 @@ def main(argv=None) -> int:
                     help="run each pool's X-ray through a search API and return "
                          "the LinkedIn profiles it finds. Needs BRAVE_API_KEY, "
                          "SERPER_API_KEY, or GOOGLE_API_KEY + GOOGLE_CSE_ID.")
+    ap.add_argument("--search", action="store_true",
+                    help="open each pool's X-ray as a real search in your "
+                         "browser. No key, no account, nothing scraped.")
+    ap.add_argument("--site", default="linkedin.com/in",
+                    help="what --search and --web target (default linkedin.com/in; "
+                         "try github.com, or a company careers domain).")
     ap.add_argument("--brief", action="store_true",
                     help="for GitHub candidates, read each one's career arc and "
                          "produce an outreach brief. Requires narrative-sourcing "
@@ -43,6 +49,7 @@ def main(argv=None) -> int:
             print(render(cached, show_all=args.all))
             _graph(cached, args)
             _find(cached, args)
+            _search(cached, args)
             _web(cached, args)
             return 0
         print("no saved map for that title; generating", file=sys.stderr)
@@ -58,8 +65,18 @@ def main(argv=None) -> int:
     print(f"\nsaved: {store.save(m)}", file=sys.stderr)
     _graph(m, args)
     _find(m, args)
+    _search(m, args)
     _web(m, args)
     return 0
+
+
+def _search(m, args) -> None:
+    """Open the X-rays in the browser. Zero configuration, always works."""
+    if not args.search:
+        return
+    pools = m.pools if args.all else (m.non_obvious or m.pools)
+    urls = web.open_in_browser(pools, site=args.site)
+    print(f"\nopened {len(urls)} searches against {args.site}", file=sys.stderr)
 
 
 def _web(m, args) -> None:
