@@ -10,7 +10,11 @@
 set -euo pipefail
 
 MODEL_URL="${MODEL_URL:-http://127.0.0.1:8082/v1/chat/completions}"
-PORT="${PORT:-8767}"
+# 8767 is taken on this host by another service. Pick something free, and
+# mount on a Funnel path rather than the root so whatever already owns "/"
+# keeps owning it.
+PORT="${PORT:-8791}"
+FUNNEL_PATH="${FUNNEL_PATH:-/model}"
 ALLOW="${ALLOW:-https://pbchrist.github.io}"
 DIR="$HOME/.model-bridge"
 RAW="https://raw.githubusercontent.com/pbchrist/talent-market-map/main/bridge/bridge.py"
@@ -69,22 +73,31 @@ else
   exit 1
 fi
 
-echo "==> publishing with Tailscale Funnel"
+echo "==> publishing on Funnel path $FUNNEL_PATH (anything already on / is left alone)"
 if ! command -v tailscale >/dev/null; then
-  echo "!! tailscale CLI not found; install it, then: sudo tailscale funnel --bg $PORT"
+  echo "!! tailscale CLI not found; install it, then:"
+  echo "   sudo tailscale funnel --bg --set-path=$FUNNEL_PATH $PORT"
   exit 1
 fi
-sudo tailscale funnel --bg "$PORT" >/dev/null 2>&1 || tailscale funnel --bg "$PORT" || {
-  echo "!! funnel failed. Try: sudo tailscale funnel --bg $PORT"; exit 1; }
+sudo tailscale funnel --bg --set-path="$FUNNEL_PATH" "$PORT" >/dev/null 2>&1 \
+  || tailscale funnel --bg --set-path="$FUNNEL_PATH" "$PORT" \
+  || { echo "!! funnel failed. Try: sudo tailscale funnel --bg --set-path=$FUNNEL_PATH $PORT"; exit 1; }
 
 sleep 3
-URL="$(tailscale status --json 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); print("https://"+d["Self"]["DNSName"].rstrip("."))' 2>/dev/null || true)"
+HOSTNAME_TS="$(tailscale status --json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["Self"]["DNSName"].rstrip("."))' 2>/dev/null || true)"
+URL="https://${HOSTNAME_TS:-<this-machine>.<tailnet>.ts.net}${FUNNEL_PATH}"
+
+echo "==> verifying through the public URL"
+sleep 2
+curl -fsS -m 15 "$URL/health" >/dev/null 2>&1 \
+  && echo "    public health check passed" \
+  || echo "    (not answering publicly yet; Funnel can take a moment)"
 
 echo
 echo "============================================================"
 echo " DONE. Public endpoint:"
 echo
-echo "   ${URL:-https://<this-machine>.<tailnet>.ts.net}"
+echo "   $URL"
 echo
 echo " Paste that URL back to Claude and it will point both apps at it."
 echo "============================================================"
