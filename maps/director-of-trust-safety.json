@@ -1,0 +1,206 @@
+{
+  "role_title": "Director of Trust & Safety",
+  "role_text": "Director of Trust & Safety \u2014 consumer social app, 40M monthly users\n\nYou will own the systems and the people that keep the platform from\nbecoming unusable: content policy, enforcement tooling, escalation paths\nfor real-world harm, and the relationship with law enforcement and\nregulators. You will build and lead a team of 12 across policy,\noperations and investigations.\n\nWe need someone who has made hard calls under time pressure with\nincomplete information, who understands that policy without tooling is a\nwish, and who can testify credibly if it comes to that.\n",
+  "core_shape": "Designing and operating real-time risk containment systems for user-generated networks, where policy rules must be translated into automated enforcement tooling, escalated for real-world harm, and defended before regulators under high ambiguity and time pressure.",
+  "pools": [
+    {
+      "name": "Tech Content Moderation & Platform Integrity",
+      "transfer_logic": "They designed content policies, built automated moderation tooling, managed law enforcement escalations, and led cross-functional ops teams for user-generated platforms.",
+      "companies": [
+        "Meta",
+        "TikTok",
+        "X",
+        "Discord",
+        "Reddit",
+        "Twitch"
+      ],
+      "titles": [
+        "Head of Trust & Safety",
+        "Director of Content Policy",
+        "VP of Community Operations",
+        "Head of Platform Integrity"
+      ],
+      "signals": [
+        "Sightengine",
+        "PerspectiveAPI",
+        "Clarifai",
+        "Hive",
+        "Tolstoy",
+        "ModSquad"
+      ],
+      "tells": [
+        "Pure policy writer with no hands-on tooling or ops leadership",
+        "Only scaled to under 5M MAU",
+        "Never managed law enforcement or regulator escalations"
+      ],
+      "obviousness": 5,
+      "confidence": 0.95
+    },
+    {
+      "name": "Marketplace Trust & Consumer Protection",
+      "transfer_logic": "They enforced transaction and user safety policies, built automated fraud and abuse detection tooling, handled real-world harm escalations, and navigated regulatory scrutiny for two-sided platforms.",
+      "companies": [
+        "Airbnb",
+        "Uber",
+        "eBay",
+        "Etsy",
+        "DoorDash",
+        "Vinted"
+      ],
+      "titles": [
+        "Director of Trust & Safety",
+        "Head of Marketplace Integrity",
+        "Director of Fraud & Abuse",
+        "VP of Consumer Protection"
+      ],
+      "signals": [
+        "Sift",
+        "Seon",
+        "Kount",
+        "Riskified",
+        "Forter",
+        "Signifyd"
+      ],
+      "tells": [
+        "Focused only on payment fraud without user safety or harm policy experience",
+        "No experience with content moderation or community guidelines",
+        "Never led cross-functional policy-to-tooling translation"
+      ],
+      "obviousness": 4,
+      "confidence": 0.9
+    },
+    {
+      "name": "Financial Crime & AML Operations",
+      "transfer_logic": "They translated regulatory and risk policies into real-time automated enforcement systems, managed high-stakes escalations with law enforcement and regulators, and made binding decisions under incomplete data at scale.",
+      "companies": [
+        "Stripe",
+        "PayPal",
+        "Revolut",
+        "Coinbase",
+        "Chime",
+        "Plaid"
+      ],
+      "titles": [
+        "Director of AML Operations",
+        "Head of Fraud Investigations",
+        "VP of Financial Crime Compliance",
+        "Director of Risk Operations"
+      ],
+      "signals": [
+        "Chainalysis",
+        "Elliptic",
+        "ComplyAdvantage",
+        "WorldCheck",
+        "Falcon",
+        "Featurespace"
+      ],
+      "tells": [
+        "Pure compliance paperwork role with no hands-on tooling or real-time ops",
+        "Only worked in traditional banking with legacy batch processing",
+        "Never handled user-facing harm or community policy enforcement"
+      ],
+      "obviousness": 2,
+      "confidence": 0.85
+    },
+    {
+      "name": "Cybersecurity Incident Response & Threat Operations",
+      "transfer_logic": "They ran real-time containment playbooks, built and tuned detection and response tooling, managed crisis escalation paths, and interfaced with law enforcement and regulators during active threats.",
+      "companies": [
+        "CrowdStrike",
+        "Mandiant",
+        "Palo Alto Networks",
+        "Cloudflare",
+        "Datadog",
+        "Snowflake"
+      ],
+      "titles": [
+        "Director of Incident Response",
+        "Head of Threat Operations",
+        "VP of Security Operations",
+        "Director of Cyber Defense"
+      ],
+      "signals": [
+        "Splunk",
+        "Sentinel",
+        "Falcon",
+        "Mandiant",
+        "Cortex",
+        "Tanium"
+      ],
+      "tells": [
+        "Pure infrastructure or network security without user-facing harm or policy enforcement experience",
+        "Never handled regulatory testimony or content/community risk",
+        "Only managed internal IT incidents, not public-facing platform threats"
+      ],
+      "obviousness": 2,
+      "confidence": 0.8
+    },
+    {
+      "name": "Gaming Player Safety & Anti-Abuse",
+      "transfer_logic": "They designed and enforced real-time behavioral policies, built automated moderation and anti-abuse tooling, managed law enforcement escalations for threats and harassment, and operated under high-volume high-pressure conditions.",
+      "companies": [
+        "Riot Games",
+        "Valve",
+        "Epic Games",
+        "Bungie",
+        "Ubisoft",
+        "Roblox"
+      ],
+      "titles": [
+        "Director of Player Safety",
+        "Head of Anti-Abuse",
+        "VP of Community Integrity",
+        "Director of Trust & Safety"
+      ],
+      "signals": [
+        "EasyAntiCheat",
+        "BattlEye",
+        "Vanguard",
+        "PlayFab",
+        "Nakama",
+        "Modio"
+      ],
+      "tells": [
+        "Focused only on technical anti-cheat without policy or harm escalation experience",
+        "Never managed law enforcement or regulatory relations",
+        "Only handled small-scale indie titles without real-time ops infrastructure"
+      ],
+      "obviousness": 3,
+      "confidence": 0.85
+    },
+    {
+      "name": "Telecom & ISP Abuse Operations",
+      "transfer_logic": "They operated automated abuse detection and takedown systems, processed law enforcement and regulatory requests at massive scale, and enforced network and content policies under strict compliance frameworks.",
+      "companies": [
+        "Cloudflare",
+        "Akamai",
+        "Fastly",
+        "Verizon",
+        "AT&T",
+        "Twilio"
+      ],
+      "titles": [
+        "Director of Abuse Operations",
+        "Head of Trust & Safety",
+        "VP of Network Integrity",
+        "Director of Compliance & Abuse"
+      ],
+      "signals": [
+        "Spamhaus",
+        "SORBS",
+        "CloudflareWAF",
+        "AkamaiKona",
+        "Fastly",
+        "TwilioTrust"
+      ],
+      "tells": [
+        "Pure network engineering or legal compliance without hands-on policy-to-tooling translation",
+        "Never led real-time ops teams or managed crisis escalation paths",
+        "Only handled backend infrastructure abuse, not user-generated content or community harm"
+      ],
+      "obviousness": 2,
+      "confidence": 0.75
+    }
+  ],
+  "created": "2026-08-21"
+}

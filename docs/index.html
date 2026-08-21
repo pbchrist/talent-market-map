@@ -1,0 +1,115 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>talent-market-map</title>
+<meta name="description" content="Find the talent pools a title search misses. No database, no scraping, no candidate data.">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#0C1017;--bg2:#131924;--card:#161E2B;--rule:#26303F;--ink:#E7ECF3;
+ --ink2:#9FADBE;--ink3:#6B7A8C;--acc:#F1580A;--teal:#3FE0C4;--red:#FF6B57}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 20px 80px}
+header{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+h1{font-size:clamp(24px,4vw,34px);margin:0;letter-spacing:-.02em;flex:1 1 auto}
+h1 span{color:var(--acc)}
+.tag{font:11px/1 "IBM Plex Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px;display:block}
+.sub{color:var(--ink2);max-width:64ch;margin:0 0 26px}
+.sub b{color:var(--ink);font-weight:600}
+label.f{display:block;margin:0 0 14px}
+label.f span{font:11px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);display:block;margin-bottom:6px}
+input,textarea{width:100%;background:var(--bg2);border:1px solid var(--rule);color:var(--ink);
+ padding:11px 13px;font:15px/1.5 inherit;border-radius:3px}
+textarea{min-height:150px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:-1px;border-color:transparent}
+.btn{font:600 12px/1 "IBM Plex Sans",sans-serif;letter-spacing:.09em;text-transform:uppercase;
+ background:transparent;border:1px solid var(--rule);color:var(--ink2);padding:11px 15px;
+ border-radius:3px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#140A04}
+.btn.primary:hover{opacity:.9;color:#140A04}
+.btn:disabled{opacity:.4;cursor:wait}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px}
+#status{font:12px/1.5 "IBM Plex Mono",monospace;color:var(--ink3);flex:1 1 220px}
+#status.bad{color:var(--red)}
+.shape{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--teal);padding:18px 20px;margin:34px 0 20px;border-radius:3px}
+.shape p{margin:6px 0 0;font-size:17px;line-height:1.5}
+.lbl{font:11px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);display:block}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+ border-bottom:1px solid var(--rule);padding-bottom:10px;font-size:14px;color:var(--ink2)}
+.tog{font:12px/1 "IBM Plex Mono",monospace;color:var(--ink3);cursor:pointer;display:flex;gap:7px;align-items:center}
+.pools{display:flex;flex-direction:column;gap:16px;margin-top:20px}
+.pool{background:var(--card);border:1px solid var(--rule);border-radius:3px;padding:20px}
+.phead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.rank{font:600 12px/1 "IBM Plex Mono",monospace;color:var(--acc)}
+.pool h3{margin:0;font-size:20px;flex:1 1 240px;letter-spacing:-.01em}
+.pill{font:10px/1 "IBM Plex Mono",monospace;letter-spacing:.06em;padding:4px 8px;border:1px solid var(--rule);color:var(--ink3);border-radius:2px;white-space:nowrap}
+.pill.rare{border-color:var(--teal);color:var(--teal)}
+.why{margin:0 0 16px;border-left:2px solid var(--acc);padding-left:14px;color:var(--ink2);font-size:15.5px}
+.rows{display:grid;gap:13px;margin-bottom:16px}
+@media(min-width:720px){.rows{grid-template-columns:1fr 1fr;gap:13px 26px}}
+.terms{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.term{font:11.5px/1.4 "IBM Plex Mono",monospace;background:var(--bg2);border:1px solid var(--rule);
+ padding:4px 8px;color:var(--ink2);border-radius:2px}
+.terms.out .term{border-color:#4A2620;color:var(--red);background:#1A0F0D}
+.strings{border-top:1px solid var(--rule);padding-top:14px}
+pre{font:11.5px/1.6 "IBM Plex Mono",monospace;background:var(--bg2);border:1px solid var(--rule);
+ padding:11px 13px;margin:7px 0 11px;white-space:pre-wrap;word-break:break-word;color:var(--ink2);border-radius:2px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn.go{border-color:var(--teal);color:var(--teal)}
+dialog{background:var(--card);color:var(--ink);border:1px solid var(--rule);border-radius:4px;
+ padding:24px;max-width:460px;width:92vw}
+dialog::backdrop{background:rgba(0,0,0,.72)}
+dialog h2{margin:0 0 6px;font-size:19px}
+dialog .note{color:var(--ink3);font-size:13.5px;margin:0 0 18px}
+.presets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+footer{margin-top:56px;border-top:1px solid var(--rule);padding-top:18px;color:var(--ink3);font-size:13.5px}
+footer a{color:var(--acc)}
+</style>
+
+<div class="wrap">
+<span class="tag">No signup · no key · runs in your browser · nothing scraped</span>
+<header>
+  <h1>talent&#8209;market&#8209;<span>map</span></h1>
+  <button class="btn" id="gear" type="button">Settings</button>
+</header>
+<p class="sub">Every sourcing tool searches the pool you already thought of. Paste a job description
+and this names the <b>capability underneath the title</b>, then finds the industries where people
+build that capability under a completely different job title — with the search that finds them.</p>
+
+<label class="f"><span>Role title</span>
+  <input id="title" placeholder="Director of Trust &amp; Safety" autocomplete="off"></label>
+<label class="f"><span>Job description</span>
+  <textarea id="role" placeholder="Paste the whole thing. The more real detail, the better the map."></textarea></label>
+<div class="row">
+  <button class="btn primary" id="run" type="button">Map the market</button>
+  <span id="status"></span>
+</div>
+
+<div id="out"></div>
+
+<footer>
+  Your key and endpoint stay in your browser's local storage and are sent only to the endpoint you chose.
+  This page holds no candidate data and scrapes nothing.
+  <a href="https://github.com/pbchrist/talent-market-map">Source</a> ·
+  built by <a href="https://www.linkedin.com/in/becomeiconic">Patrick Christell</a>
+</footer>
+</div>
+
+<dialog id="settings">
+  <h2>Point it at a model</h2>
+  <p class="note">It works with no key at all. Change this only if you want it to use your own model.</p>
+  <div class="presets">
+    <button class="btn" data-preset="free" type="button">Free (no key)</button>
+    <button class="btn" data-preset="openai" type="button">OpenAI</button>
+    <button class="btn" data-preset="anthropic" type="button">Anthropic</button>
+    <button class="btn" data-preset="local" type="button">Local (llama.cpp)</button>
+  </div>
+  <label class="f"><span>Endpoint URL</span><input id="url" placeholder="https://api.openai.com/v1/chat/completions"></label>
+  <label class="f"><span>API key</span><input id="key" type="password" placeholder="leave blank for a local model"></label>
+  <label class="f"><span>Model</span><input id="model" placeholder="gpt-4o"></label>
+  <div class="row"><button class="btn primary" id="save" type="submit">Save</button>
+  <button class="btn" type="button" onclick="document.getElementById('settings').close()">Cancel</button></div>
+</dialog>
+<script src="app.js"></script>
