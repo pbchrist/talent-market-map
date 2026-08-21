@@ -2,10 +2,14 @@
 const $ = s => document.querySelector(s);
 const LS = "tmm.settings.v1";
 
-const FREE = {url:"https://text.pollinations.ai/openai", model:"openai", key:""};
+// Points at a bridge fronting a self-hosted Qwen 3.8. No key, no signup,
+// nothing for a visitor to configure - which is the entire point. Anyone who
+// would rather use their own model changes it in Settings.
+const FREE = {url:"https://users-macbook-pro.tailf32530.ts.net/v1/chat/completions",
+              model:"", key:""};
 
 const PRESETS = {
-  free:      {url:FREE.url, model:FREE.model, key:false},
+  hosted:    {url:FREE.url, model:FREE.model, key:false},
   openai:    {url:"https://api.openai.com/v1/chat/completions", model:"gpt-4o", key:true},
   anthropic: {url:"https://api.anthropic.com/v1/messages",      model:"claude-sonnet-4-5", key:true},
   local:     {url:"http://localhost:8080/v1/chat/completions",  model:"", key:false},
