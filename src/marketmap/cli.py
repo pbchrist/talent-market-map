@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 
-from src.marketmap import find as finder, graph, store, web
+from src.marketmap import browser, find as finder, graph, store, web
 from src.marketmap.engine import MapError, generate
 from src.marketmap.render import render
 
@@ -27,6 +27,10 @@ def main(argv=None) -> int:
                     help="run each pool's X-ray through a search API and return "
                          "the LinkedIn profiles it finds. Needs BRAVE_API_KEY, "
                          "SERPER_API_KEY, or GOOGLE_API_KEY + GOOGLE_CSE_ID.")
+    ap.add_argument("--browse", nargs="?", const=8, type=int, metavar="N",
+                    help="drive a real browser through each pool's X-ray and "
+                         "return the profiles it finds. No key, no account. "
+                         "Opens a visible window; keep the volume human.")
     ap.add_argument("--search", action="store_true",
                     help="open each pool's X-ray as a real search in your "
                          "browser. No key, no account, nothing scraped.")
@@ -50,6 +54,7 @@ def main(argv=None) -> int:
             _graph(cached, args)
             _find(cached, args)
             _search(cached, args)
+            _browse(cached, args)
             _web(cached, args)
             return 0
         print("no saved map for that title; generating", file=sys.stderr)
@@ -66,8 +71,25 @@ def main(argv=None) -> int:
     _graph(m, args)
     _find(m, args)
     _search(m, args)
+    _browse(m, args)
     _web(m, args)
     return 0
+
+
+def _browse(m, args) -> None:
+    """Drive a real browser through the searches and read the results back."""
+    if not args.browse:
+        return
+    print("\n" + "=" * 66)
+    print("PROFILES FOUND BY BROWSER")
+    print("=" * 66)
+    for pool in (m.pools if args.all else (m.non_obvious or m.pools)):
+        try:
+            hits = browser.search_pool(pool, site=args.site, limit=args.browse)
+            print("\n" + browser.render(pool, hits))
+        except browser.BrowserError as exc:
+            print(f"\n{pool.name}: {exc}")
+            return
 
 
 def _search(m, args) -> None:

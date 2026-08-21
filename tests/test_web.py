@@ -56,7 +56,7 @@ def test_works_with_no_keys_at_all(monkeypatch):
     from src.marketmap.web import available
     for k in ("BRAVE_API_KEY", "SERPER_API_KEY", "GOOGLE_API_KEY", "GOOGLE_CSE_ID"):
         monkeypatch.delenv(k, raising=False)
-    assert available() == "searx"
+    assert available() == "ddg"
 
 
 def test_a_key_takes_precedence_when_present(monkeypatch):

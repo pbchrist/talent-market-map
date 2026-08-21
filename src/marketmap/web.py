@@ -12,7 +12,8 @@ Search engines index those pages and sell API access to their index; that is
 the supported path and it is the one this uses.
 
 Backends, in the order they are tried:
-  SearXNG            no key, no signup, the default
+  DuckDuckGo Lite    no key, no account, no card - the default
+  SearXNG            no key, but public instances rate-limit hard
   Brave Search API   BRAVE_API_KEY      if you want higher volume
   Serper (Google)    SERPER_API_KEY
   Google CSE         GOOGLE_API_KEY + GOOGLE_CSE_ID
@@ -38,6 +39,7 @@ SEARX_INSTANCES = (
     "https://priv.au",
 )
 
+import html
 import os
 import re
 from dataclasses import dataclass
@@ -45,6 +47,10 @@ from dataclasses import dataclass
 import httpx
 
 from src.marketmap import strings
+
+
+_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+       "(KHTML, like Gecko) Chrome/120 Safari/537.36")
 
 
 class WebError(RuntimeError):
@@ -79,14 +85,56 @@ class Hit:
 
 
 def available() -> str:
-    """Always returns something: SearXNG needs no configuration."""
+    """Always returns something. The default costs nothing and needs no
+    account, because a tool that demands a credit card before it will run
+    once is a tool nobody tries."""
     if os.environ.get("BRAVE_API_KEY"):
         return "brave"
     if os.environ.get("SERPER_API_KEY"):
         return "serper"
     if os.environ.get("GOOGLE_API_KEY") and os.environ.get("GOOGLE_CSE_ID"):
         return "google"
-    return "searx"
+    return "ddg"
+
+
+_DDG_ROW = re.compile(
+    r'<a[^>]+class="result-link"[^>]*href="([^"]+)"[^>]*>(.*?)</a>.*?'
+    r'(?:class="result-snippet"[^>]*>(.*?)</td>)?', re.S)
+
+
+def _clean(fragment: str) -> str:
+    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", "", fragment or ""))).strip()
+
+
+def _ddg(q: str, n: int, client) -> list[Hit]:
+    """DuckDuckGo's lite endpoint: plain HTML, no key, no account.
+
+    Chosen as the default because it is the only free path that actually
+    answered. Google and Bing block programmatic requests, Mojeek returns
+    403, and every public SearXNG instance rate-limits. This one works.
+    """
+    r = client.post("https://lite.duckduckgo.com/lite/", data={"q": q},
+                    headers={"User-Agent": _UA}, follow_redirects=True)
+    if r.status_code >= 400:
+        raise WebError(f"DuckDuckGo returned {r.status_code}")
+
+    hits, seen = [], set()
+    for m in re.finditer(r'<a[^>]+class="result-link"[^>]*href="([^"]+)"[^>]*>(.*?)</a>',
+                         r.text, re.S):
+        url, title = m.group(1), _clean(m.group(2))
+        if url in seen:
+            continue
+        seen.add(url)
+        hits.append(Hit(title, url))
+        if len(hits) >= n:
+            break
+
+    # Snippets live in their own cells; pair them up positionally.
+    snips = [_clean(x) for x in re.findall(
+        r'class="result-snippet"[^>]*>(.*?)</td>', r.text, re.S)]
+    for hit, snip in zip(hits, snips):
+        hit.snippet = snip
+    return hits
 
 
 def _searx(q: str, n: int, client) -> list[Hit]:
@@ -144,7 +192,7 @@ def _google(q: str, n: int, client) -> list[Hit]:
             for h in (r.json().get("items") or [])]
 
 
-_BACKENDS = {"searx": _searx, "brave": _brave,
+_BACKENDS = {"ddg": _ddg, "searx": _searx, "brave": _brave,
              "serper": _serper, "google": _google}
 
 
