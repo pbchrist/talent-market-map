@@ -1,0 +1,180 @@
+{
+  "role_title": "Senior Simulation Engineer, Autonomous Vehicles",
+  "role_text": "Senior Simulation Engineer \u2014 Autonomous Vehicles\n\nYou will build and extend the simulation environment used to train and\nvalidate autonomous vehicle behavior: a real-world-scale virtual city\nwhere our AV stack drives millions of miles before it drives one real\none. The world must be believable enough that behavior learned in it\ntransfers to the street.\n\nResponsibilities include procedural generation of road networks and\nenvironments, behavioral modeling of pedestrians and other drivers,\nreal-time performance at scale, and building the content pipeline that\nlets non-engineers author scenarios.\n\nRequirements: strong C++, real-time engine experience, and a track\nrecord building large simulated worlds that stay performant.\n",
+  "core_shape": "Architecting and optimizing large-scale, real-time virtual environments where procedurally generated worlds and complex agent behaviors must run efficiently while maintaining high fidelity for downstream decision-making.",
+  "pools": [
+    {
+      "name": "Defense & Aviation Training Systems",
+      "transfer_logic": "They build high-fidelity, real-time virtual cockpits and battlefields where pilot/operator decision-making must transfer to reality, using procedural terrain generation and complex traffic/agent modeling under strict latency budgets.",
+      "companies": [
+        "CAE",
+        "L3Harris",
+        "Boeing Defense",
+        "FlightSafety International",
+        "Lockheed Martin"
+      ],
+      "titles": [
+        "Mission Systems Engineer",
+        "Virtual Environment Developer",
+        "Training Systems Architect",
+        "Simulator Software Engineer"
+      ],
+      "signals": [
+        "C++",
+        "OpenGL/DirectX/Vulkan",
+        "Unity/Unreal",
+        "STK (Systems Tool Kit)",
+        "MATLAB/Simulink",
+        "DO-178C",
+        "real-time OS (VxWorks, QNX)",
+        "hardware-in-the-loop integration"
+      ],
+      "tells": [
+        "Heavy focus on motion platform integration or certification/compliance rather than pure software world-building",
+        "Profiles dominated by safety-critical documentation over scalable content pipelines or agent AI"
+      ],
+      "obviousness": 2,
+      "confidence": 0.85
+    },
+    {
+      "name": "Virtual Production & Real-Time VFX Pipelines",
+      "transfer_logic": "They author massive, real-time 3D environments with complex lighting, physics, and crowd simulation that must run at broadcast frame rates, building heavy tooling so directors and artists can iterate without engineering bottlenecks.",
+      "companies": [
+        "ILMxLAB",
+        "Framestore",
+        "DNEG",
+        "Weta FX",
+        "MPC",
+        "Method Studios"
+      ],
+      "titles": [
+        "Real-Time VFX Technical Director",
+        "Virtual Production Engineer",
+        "Pipeline TD",
+        "Real-Time Rendering Engineer"
+      ],
+      "signals": [
+        "Unreal Engine",
+        "Houdini",
+        "Python/C++ tooling",
+        "USD (OpenUSD)",
+        "GPU compute",
+        "real-time ray tracing",
+        "crowd simulation (Golaem, Massive)",
+        "Nuke"
+      ],
+      "tells": [
+        "Heavy emphasis on offline rendering or compositing rather than real-time performance",
+        "Profiles show asset creation or shot delivery rather than engine architecture or agent behavior modeling"
+      ],
+      "obviousness": 1,
+      "confidence": 0.8
+    },
+    {
+      "name": "Immersive Theme Park & Ride Control Systems",
+      "transfer_logic": "They engineer real-time, synchronized virtual environments with complex crowd/agent behaviors and procedural asset streaming that must run flawlessly at 60fps+ for live audiences, supported by designer-friendly authoring tools.",
+      "companies": [
+        "Walt Disney Imagineering",
+        "Universal Creative",
+        "SFX Studios",
+        "Mack Rides",
+        "Vekoma",
+        "Heeter"
+      ],
+      "titles": [
+        "Real-Time Experience Engineer",
+        "Interactive Environment Developer",
+        "Ride Control Software Engineer",
+        "Immersive Media TD"
+      ],
+      "signals": [
+        "C++",
+        "Unity/Unreal",
+        "DMX/Art-Net",
+        "real-time synchronization protocols",
+        "custom middleware",
+        "crowd simulation",
+        "low-latency networking",
+        "hardware integration"
+      ],
+      "tells": [
+        "Focus on ride mechanics, safety systems, or projection mapping rather than scalable world simulation or agent AI",
+        "Profiles show event-driven scripting or show control rather than engine-level optimization"
+      ],
+      "obviousness": 1,
+      "confidence": 0.75
+    },
+    {
+      "name": "Military Wargaming & Tactical C2 Environments",
+      "transfer_logic": "They build real-time, large-scale virtual battlefields with adversarial agent AI and procedural terrain generation, requiring strict performance budgets and tooling for mission planners to author complex scenarios.",
+      "companies": [
+        "Anduril",
+        "Palantir",
+        "BAE Systems",
+        "Raytheon",
+        "General Atomics",
+        "Simula"
+      ],
+      "titles": [
+        "Wargame Systems Engineer",
+        "C2 Simulation Developer",
+        "Tactical Environment Architect",
+        "Red Team Simulation Engineer"
+      ],
+      "signals": [
+        "C++",
+        "Java/Python",
+        "STK",
+        "JCATS",
+        "VBS (Virtual Battlespace)",
+        "agent-based modeling",
+        "real-time networking",
+        "scenario authoring tools",
+        "geospatial data (GIS)"
+      ],
+      "tells": [
+        "Heavy reliance on legacy Java/Python stacks or offline batch processing rather than real-time C++ engines",
+        "Profiles emphasize data analytics or command interfaces over world simulation performance"
+      ],
+      "obviousness": 1,
+      "confidence": 0.8
+    },
+    {
+      "name": "Warehouse & Logistics Robotics Testbeds",
+      "transfer_logic": "They construct real-time digital twins of massive fulfillment centers with thousands of interacting robots and dynamic obstacles, optimizing for sim-to-real transfer and building scenario authoring tools for operations teams.",
+      "companies": [
+        "Amazon Robotics",
+        "Ocado Technology",
+        "Locus Robotics",
+        "Geek+",
+        "AutoStore",
+        "Symbotic"
+      ],
+      "titles": [
+        "Robotics Simulation Engineer",
+        "Digital Twin Architect",
+        "Fleet Simulation Developer",
+        "Warehouse Systems Engineer"
+      ],
+      "signals": [
+        "C++",
+        "ROS/ROS2",
+        "Gazebo",
+        "Isaac Sim",
+        "MuJoCo",
+        "PyBullet",
+        "real-time pathfinding",
+        "agent-based traffic control",
+        "scenario generation",
+        "sim-to-real validation"
+      ],
+      "tells": [
+        "Focus on single-robot kinematics or offline scheduling rather than large-scale world simulation",
+        "Profiles show heavy Python/MATLAB usage without real-time engine optimization experience"
+      ],
+      "obviousness": 2,
+      "confidence": 0.85
+    }
+  ],
+  "created": "2026-08-20"
+}
