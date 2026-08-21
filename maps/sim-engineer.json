@@ -15,7 +15,8 @@
       "signals": [],
       "tells": [],
       "obviousness": 1,
-      "confidence": 0.5
+      "confidence": 0.5,
+      "dropped_signals": []
     }
   ],
   "created": "2026-08-21"

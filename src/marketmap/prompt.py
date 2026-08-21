@@ -37,10 +37,21 @@ role's title reworded, delete it.
 Naughty Dog, Bungie.
 - titles must be what those people ACTUALLY call themselves in that \
 industry, which is usually nothing like the target title.
+- titles must name the people who DID THE WORK in transfer_logic, not the \
+industry's common job titles. Naming the setting instead of the function is \
+the most damaging error you can make here, because the search string is \
+built from these. For a theme-park pool on a capital-projects role, \
+"Attraction Manager" and "Maintenance Supervisor" are the setting - they \
+run the park. "Project Controls Manager", "Commissioning Manager" and \
+"Owner's Representative" are the function - they built it. Avoid junior \
+catch-alls like "Project Coordinator" that exist in every industry and \
+select for nobody.
 - tells are disqualifiers: what on a profile means this person looks \
 right but is not.
 - obviousness: 5 = every recruiter searches here first, 1 = almost \
-nobody would think of it. Rate honestly. Do NOT suppress a pool because \
+nobody would think of it. Your number is recomputed from the titles \
+before the reader sees it; what still matters here is WHICH pools you \
+write down. Do NOT suppress a pool because \
 it is obvious - if the best-known pool for this role is genuinely the \
 right answer, include it and rate it 4 or 5. The reader hides the \
 obvious ones by default; they cannot hide what you never wrote down.

@@ -15,6 +15,10 @@ class Pool:
     tells: list[str] = field(default_factory=list)    # what rules them OUT
     obviousness: int = 3           # 1 = nobody searches here, 5 = everybody does
     confidence: float = 0.5
+    # Signals the model offered that name a category rather than a thing, so
+    # they were pulled out of the search strings. Shown, not hidden: the
+    # reader should see what the filter took. See searchable.py.
+    dropped_signals: list[str] = field(default_factory=list)
 
 
 @dataclass

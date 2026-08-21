@@ -5,6 +5,7 @@ from datetime import date
 from src.marketmap import llm, prompt as prompt_mod
 from src.marketmap.parsing import ParseError, extract_json
 from src.marketmap.obviousness import derive as derive_obviousness
+from src.marketmap.searchable import keep as keep_signals
 from src.marketmap.types import MarketMap, Pool
 
 
@@ -33,8 +34,12 @@ def _pool(d: dict, role_title: str = "") -> Pool | None:
     except (TypeError, ValueError):
         conf = 0.5
 
+    # A signal that names the pool's own topic back at you is not a search
+    # term. Filtered here rather than asked for, because asking did not work.
+    signals, dropped = keep_signals(strs("signals"))
+
     return Pool(name=name, transfer_logic=logic, companies=strs("companies"),
-                titles=titles, signals=strs("signals"),
+                titles=titles, signals=signals, dropped_signals=dropped,
                 tells=strs("tells"), obviousness=obv, confidence=conf)
 
 

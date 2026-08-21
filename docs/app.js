@@ -33,8 +33,9 @@ Hard rules:
 - Synonyms of the job title are NOT pools. If a pool's titles are the role's title reworded, delete it.
 - Name real, specific companies.
 - titles must be what those people ACTUALLY call themselves in that industry.
+- titles must name the people who DID THE WORK in transfer_logic, not the industry's common job titles. Naming the setting instead of the function is the most damaging error here, because the search string is built from these. For a theme-park pool on a capital-projects role, "Attraction Manager" and "Maintenance Supervisor" are the setting - they run the park. "Project Controls Manager", "Commissioning Manager" and "Owner's Representative" are the function - they built it. Avoid junior catch-alls like "Project Coordinator" that exist in every industry and select for nobody.
 - tells are disqualifiers: what on a profile means this person looks right but is not.
-- obviousness: 5 = every recruiter searches here first, 1 = almost nobody would think of it. Rate honestly. Include 1-2 anchor pools and 3-5 non-obvious ones.
+- obviousness: your number is recomputed from the titles before the reader sees it; what matters here is WHICH pools you write down. Include 1-2 anchor pools (the obvious ones, to prove you know the market) and 3-5 non-obvious ones.
 - signals must be single searchable terms - product or technology names, one per entry, no prose.
 - Between 5 and 8 pools.
 
@@ -105,9 +106,99 @@ function extractJSON(text){
   throw new Error("The model's JSON was cut off — raise its token limit.");
 }
 
+// --- Derived, never believed --------------------------------------------
+// Both of these used to be taken from the model and both were wrong in live
+// use. The Python package has the same two functions with the same tests;
+// this is the port, and it must stay in step. See src/marketmap/obviousness.py
+// and src/marketmap/searchable.py for the reasoning.
+
+const OBV_STOP = new Set(["a","an","and","at","by","for","from","in","of","on",
+  "or","the","to","with","senior","staff","principal","lead","head","chief",
+  "director","manager","vp","president","engineer","specialist","analyst",
+  "associate","consultant","i","ii","iii","iv","jr","sr"]);
+
+function obvWords(text){
+  return new Set((String(text||"").toLowerCase().match(/[a-z0-9+#]+/g)||[])
+    .filter(w => !OBV_STOP.has(w) && w.length > 2));
+}
+
+// 1 = almost nobody searches here, 5 = everybody starts here. Measured from
+// the title's side: how much of what these people call themselves is
+// vocabulary the recruiter is already typing.
+function deriveObviousness(roleTitle, titles){
+  const list = (titles||[]).filter(x => x && String(x).trim());
+  if(!list.length) return 3;
+  const role = obvWords(roleTitle);
+  if(!role.size) return 3;
+  const scores = [];
+  for(const t of list){
+    const tw = obvWords(t);
+    if(!tw.size) continue;
+    let hit = 0; tw.forEach(w => { if(role.has(w)) hit++; });
+    scores.push(hit / tw.size);
+  }
+  if(!scores.length) return 3;
+  // Mean, not max: one generically-named title should not make a whole pool
+  // look obvious.
+  const best = scores.reduce((a,b)=>a+b,0) / scores.length;
+  if(best >= 0.75) return 5;
+  if(best >= 0.45) return 4;
+  if(best >= 0.25) return 3;
+  if(best > 0) return 2;
+  return 1;
+}
+
+const SIG_CATEGORY = new Set(["real","time","digital","analog","systems",
+  "system","software","hardware","engineering","management","development",
+  "design","integration","testing","modeling","modelling","simulation",
+  "analysis","processing","control","controls","tooling","pipeline",
+  "workflow","automation","infrastructure","platform","framework",
+  "technology","technologies","solutions","applications","services",
+  "operations","tools","techniques","methods","advanced","modern","based",
+  "general","and","or"]);
+
+// A token that could only be the proper name of something.
+function sigNamed(token){
+  if(/\d/.test(token)) return true;
+  if(/[+#.]/.test(token)) return true;
+  for(const run of (token.match(/[A-Za-z]+/g)||[])){
+    if(/[a-z][A-Z]/.test(run)) return true;          // OpenUSD, PyTorch
+    if(run.length > 1 && run === run.toUpperCase()) return true;  // ARINC
+  }
+  return false;
+}
+
+function isSearchable(signal){
+  if(typeof signal !== "string") return false;
+  const words = signal.split(/\s+/).filter(Boolean);
+  if(!words.length || words.length > 3) return false;
+  if(words.some(sigNamed)) return true;
+  if(words.length >= 3) return false;
+  return !words.every(w => (w.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean))
+    .every(part => SIG_CATEGORY.has(part)));
+}
+
+// Never empties a pool: a pool showing weak terms is readable, one showing
+// none looks broken.
+function keepSignals(signals){
+  const all = (signals||[]).filter(s => typeof s === "string" && s.trim());
+  const kept = all.filter(isSearchable);
+  if(!kept.length) return {kept: all, dropped: []};
+  return {kept, dropped: all.filter(s => !kept.includes(s))};
+}
+
+function normalizePool(p, roleTitle){
+  const {kept, dropped} = keepSignals(p.signals);
+  return Object.assign({}, p, {
+    obviousness: deriveObviousness(roleTitle, p.titles),
+    signals: kept,
+    dropped_signals: dropped,
+  });
+}
+
 function poolCard(p, i){
   const el = document.createElement("article"); el.className="pool";
-  const obv = Math.max(1, Math.min(5, p.obviousness ?? 3));
+  const obv = p.obviousness ?? 3;   // derived in normalizePool, not the model's number
   const g = "https://www.google.com/search?q=" + encodeURIComponent(xray(p));
   el.innerHTML = `
     <div class="phead">
@@ -121,6 +212,7 @@ function poolCard(p, i){
       <div><span class="lbl">What they call themselves</span><div class="terms" data-k="titles"></div></div>
       <div><span class="lbl">Look for</span><div class="terms" data-k="signals"></div></div>
       <div><span class="lbl">Rules them out</span><div class="terms out" data-k="tells"></div></div>
+      <div><span class="lbl">Not searchable, so not used</span><div class="terms cut" data-k="dropped_signals"></div></div>
     </div>
     <div class="strings">
       <span class="lbl">Search this pool</span>
@@ -158,7 +250,9 @@ function renderMap(map, roleTitle){
   shape.querySelector("p").textContent = map.core_shape || "";
   out.appendChild(shape);
 
-  const pools = (map.pools||[]).slice().sort((a,b)=>(a.obviousness??3)-(b.obviousness??3));
+  const pools = (map.pools||[]).map(p => normalizePool(p, roleTitle))
+    .sort((a,b)=>(a.obviousness??3)-(b.obviousness??3));
+  map.pools = pools;   // so the status line and storage see what was rendered
   const bar = document.createElement("div"); bar.className="bar";
   bar.innerHTML = `<span>${pools.length} pools for <b></b></span>
     <label class="tog"><input type="checkbox" id="hideobv"> hide the obvious ones</label>`;
@@ -187,7 +281,10 @@ async function run(){
     const map = extractJSON(await complete(prompt));
     if(!map.pools?.length) throw new Error("No usable pools came back. Try a longer description.");
     renderMap(map, title);
-    status(`${map.pools.length} pools.`);
+    const cut = map.pools.reduce((n,p)=>n+(p.dropped_signals||[]).length, 0);
+    status(`${map.pools.length} pools.` + (cut
+      ? ` ${cut} signal${cut>1?"s":""} named a category rather than a search term and were left out of the strings.`
+      : ""));
     localStorage.setItem("tmm.last", JSON.stringify({title, map}));
   }catch(e){ status(e.message, true); }
   finally{ $("#run").disabled = false; }
