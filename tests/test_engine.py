@@ -29,11 +29,22 @@ def test_non_obvious_filters_out_the_pools_everyone_searches():
     assert [p.name for p in m.non_obvious] == ["Procedural generation"]
 
 
-def test_clamps_out_of_range_obviousness():
+def test_the_models_obviousness_is_ignored_entirely():
+    # It rated quant risk 4/5 for an AV simulation req and military
+    # construction 1/5 for a construction req. Wrong in both directions, so
+    # the number is derived from the titles instead. See obviousness.py.
     body = {"core_shape": "s", "pools": [
-        {"name": "p", "transfer_logic": "l", "obviousness": 99, "confidence": 5.0}]}
-    p = generate("t", "x"*50, complete=fake(body)).pools[0]
-    assert p.obviousness == 5 and p.confidence == 1.0
+        {"name": "p", "transfer_logic": "l", "titles": ["Pipeline TD"],
+         "obviousness": 5, "confidence": 5.0}]}
+    p = generate("Simulation Engineer", "x"*50, complete=fake(body)).pools[0]
+    assert p.obviousness == 1          # no shared vocabulary with the role
+    assert p.confidence == 1.0         # confidence is still clamped
+
+
+def test_derived_obviousness_tracks_the_role_title():
+    body = {"core_shape": "s", "pools": [
+        {"name": "p", "transfer_logic": "l", "titles": ["Simulation Engineer"]}]}
+    assert generate("Simulation Engineer", "x"*50, complete=fake(body)).pools[0].obviousness == 5
 
 
 def test_drops_a_pool_with_no_transfer_logic():

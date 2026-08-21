@@ -3,7 +3,7 @@ from src.marketmap.store import find, load, save, slug
 import json
 
 BODY = {"core_shape": "s", "pools": [{"name": "p", "transfer_logic": "l",
-        "companies": ["Rockstar"], "titles": ["TA"], "obviousness": 1}]}
+        "companies": ["Rockstar"], "titles": ["Pipeline Technical Director"], "obviousness": 1}]}
 
 
 def test_round_trips(tmp_path):
