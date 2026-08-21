@@ -96,3 +96,34 @@ def test_render_shows_evidence_not_just_names():
 
 def test_render_says_so_when_nothing_matched():
     assert "no public repositories matched" in render(POOL, [])
+
+
+from src.marketmap.find import tokenize
+
+
+def test_tokenize_splits_parentheticals():
+    assert tokenize("USD (OpenUSD)") == ["USD", "OpenUSD"]
+
+
+def test_tokenize_splits_slashes_and_drops_filler():
+    assert tokenize("Python/C++ tooling") == ["Python", "C++"]
+
+
+def test_tokenize_handles_a_list_inside_parens():
+    assert tokenize("crowd simulation (Golaem, Massive)") == [
+        "crowd simulation", "Golaem", "Massive"]
+
+
+def test_tokenize_leaves_a_clean_signal_alone():
+    assert tokenize("real-time ray tracing") == ["real-time ray tracing"]
+
+
+def test_tokenize_drops_bare_filler():
+    assert tokenize("tooling") == []
+
+
+def test_queries_expand_beyond_the_first_signal():
+    p = Pool(name="x", transfer_logic="y",
+             signals=["Python/C++ tooling", "USD (OpenUSD)"])
+    got = [tok for tok, _ in queries(p)]
+    assert "Python" in got and "C++" in got and "OpenUSD" in got

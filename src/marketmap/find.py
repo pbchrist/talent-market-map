@@ -90,13 +90,54 @@ def _get(path: str, client: httpx.Client | None = None) -> dict:
     return r.json()
 
 
-def queries(pool, max_signals: int = 6) -> list[tuple[str, str]]:
-    """Build one repo-search query per signal. Returns (signal, query)."""
+# Models write signals as prose: "crowd simulation (Golaem, Massive)",
+# "Python/C++ tooling", "USD (OpenUSD)". Handed to a search API verbatim those
+# return nothing, which is why an early version matched only the one signal
+# that happened to be a clean product name. Split them into the tokens a
+# search engine can actually use.
+_NOISE = {"tooling", "tools", "experience", "stack", "based", "development",
+          "engine" }
+
+
+def tokenize(signal: str) -> list[str]:
+    """One prose signal -> the searchable terms hiding inside it."""
+    parts, buf, depth = [], "", 0
+    for ch in signal:
+        if ch == "(":
+            depth += 1
+            parts.append(buf); buf = ""
+        elif ch == ")":
+            depth -= 1
+            parts.append(buf); buf = ""
+        elif ch in "/,;" or (ch == "&"):
+            parts.append(buf); buf = ""
+        else:
+            buf += ch
+    parts.append(buf)
+
     out = []
-    for sig in pool.signals[:max_signals]:
-        s = sig.strip()
-        if not s:
+    for raw in parts:
+        t = raw.strip(" -\t")
+        if not t:
             continue
+        words = [w for w in t.split() if w.lower() not in _NOISE]
+        t = " ".join(words).strip()
+        if len(t) < 2 or t.lower() in _NOISE:
+            continue
+        if t not in out:
+            out.append(t)
+    return out
+
+
+def queries(pool, max_signals: int = 6) -> list[tuple[str, str]]:
+    """Build one repo-search query per searchable token. Returns (token, query)."""
+    out = []
+    tokens = []
+    for sig in pool.signals:
+        for t in tokenize(sig):
+            if t not in tokens:
+                tokens.append(t)
+    for s in tokens[:max_signals]:
         lang = _LANGS.get(s.lower())
         if lang:
             out.append((s, f"/search/repositories?q=language:{lang}"

@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 
-from src.marketmap import graph, store
+from src.marketmap import find as finder, graph, store
 from src.marketmap.engine import MapError, generate
 from src.marketmap.render import render
 
@@ -23,6 +23,10 @@ def main(argv=None) -> int:
                          "maps/<slug>.html next to the saved map.")
     ap.add_argument("--open", action="store_true",
                     help="open the graph in your browser once it is written")
+    ap.add_argument("--find", nargs="?", const=8, type=int, metavar="N",
+                    help="search GitHub for people who have actually built "
+                         "what each pool is about, and print them with the "
+                         "repository that matched. Official API, no scraping.")
     args = ap.parse_args(argv)
 
     if args.reuse:
@@ -30,6 +34,7 @@ def main(argv=None) -> int:
         if cached:
             print(render(cached, show_all=args.all))
             _graph(cached, args)
+            _find(cached, args)
             return 0
         print("no saved map for that title; generating", file=sys.stderr)
 
@@ -43,7 +48,26 @@ def main(argv=None) -> int:
     print(render(m, show_all=args.all))
     print(f"\nsaved: {store.save(m)}", file=sys.stderr)
     _graph(m, args)
+    _find(m, args)
     return 0
+
+
+def _find(m, args) -> None:
+    """Search each pool for real people. Runs last so a GitHub outage can
+    never cost you the map."""
+    if not args.find:
+        return
+    pools = m.pools if args.all else (m.non_obvious or m.pools)
+    print("\n" + "=" * 66)
+    print("PEOPLE WHO HAVE BUILT THIS")
+    print("=" * 66)
+    for pool in pools:
+        try:
+            people = finder.search_pool(pool, limit=args.find)
+        except finder.FindError as exc:
+            print(f"\n{pool.name}: search failed - {exc}")
+            continue
+        print("\n" + finder.render(pool, people))
 
 
 def _graph(m, args) -> None:

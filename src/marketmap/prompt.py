@@ -40,9 +40,14 @@ industry, which is usually nothing like the target title.
 - tells are disqualifiers: what on a profile means this person looks \
 right but is not.
 - obviousness: 5 = every recruiter searches here first, 1 = almost \
-nobody would think of it. Most of your pools should be 1 or 2. A map \
-full of 4s and 5s is a failed map.
-- Between 4 and 7 pools. Fewer good ones beats more.
+nobody would think of it. Rate honestly. Do NOT suppress a pool because \
+it is obvious - if the best-known pool for this role is genuinely the \
+right answer, include it and rate it 4 or 5. The reader hides the \
+obvious ones by default; they cannot hide what you never wrote down.
+- Include 1-2 anchor pools (the ones an experienced recruiter would \
+reach for first) and 3-5 non-obvious ones. The anchors prove you \
+understand the market; the rest is why anyone needs this.
+- Between 5 and 8 pools total.
 
 Return ONLY JSON:
 {
@@ -52,7 +57,8 @@ Return ONLY JSON:
     "transfer_logic": "what they did there that is the same work here",
     "companies": ["real company names"],
     "titles": ["what they call themselves there"],
-    "signals": ["tools, technologies, artifacts visible on a profile"],
+    "signals": ["single searchable terms - product or technology names, \
+one per entry, no prose. Houdini. OpenUSD. ROS2. Not 'Python/C++ tooling'."],
     "tells": ["what disqualifies someone who looks right"],
     "obviousness": 1,
     "confidence": 0.0
