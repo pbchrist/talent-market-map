@@ -5,7 +5,11 @@ const LS = "tmm.settings.v1";
 // Points at a bridge fronting a self-hosted Qwen 3.8. No key, no signup,
 // nothing for a visitor to configure - which is the entire point. Anyone who
 // would rather use their own model changes it in Settings.
-const FREE = {url:"https://patrick-beastmaster.tailf32530.ts.net/model/v1/chat/completions",
+// Deliberately NOT the tailnet hostname. Anyone on the same tailnet resolves
+// that to a 100.x address and Chrome blocks a public page from reaching a
+// private one, so the app worked for strangers and failed for its owner.
+// This resolves to Cloudflare for everybody.
+const FREE = {url:"https://song-pattern-rice-graham.trycloudflare.com/v1/chat/completions",
               model:"", key:""};
 
 const PRESETS = {
