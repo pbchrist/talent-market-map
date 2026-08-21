@@ -76,6 +76,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Access-Control-Max-Age", "86400")
+        # Chrome Private Network Access. Anyone on the same tailnet resolves
+        # this host to a 100.x address, and Chrome refuses to let a public
+        # page reach a private one unless the server opts in by name. Without
+        # this the app works for strangers and fails for the person who owns
+        # it, which is the worst possible split.
+        self.send_header("Access-Control-Allow-Private-Network", "true")
 
     def _json(self, code, payload, origin="", close=False):
         body = json.dumps(payload).encode()
@@ -103,8 +109,14 @@ class Handler(BaseHTTPRequestHandler):
         return self.rfile.read(n) if n > 0 else b""
 
     def do_OPTIONS(self):
+        self._drain()
         self.send_response(204)
         self._cors(self.headers.get("Origin", ""))
+        # Echo back whatever headers the preflight asked about, so a browser
+        # that requests something beyond Content-Type is not refused.
+        want = self.headers.get("Access-Control-Request-Headers")
+        if want:
+            self.send_header("Access-Control-Allow-Headers", want)
         self.send_header("Content-Length", "0")
         self.end_headers()
 
