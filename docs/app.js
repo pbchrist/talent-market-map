@@ -5,7 +5,7 @@ const LS = "tmm.settings.v1";
 // Points at a bridge fronting a self-hosted Qwen 3.8. No key, no signup,
 // nothing for a visitor to configure - which is the entire point. Anyone who
 // would rather use their own model changes it in Settings.
-const FREE = {url:"https://users-macbook-pro.tailf32530.ts.net/v1/chat/completions",
+const FREE = {url:"https://patrick-beastmaster.tailf32530.ts.net/model/v1/chat/completions",
               model:"", key:""};
 
 const PRESETS = {
