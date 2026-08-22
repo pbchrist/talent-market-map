@@ -333,6 +333,48 @@ function renderMap(map, roleTitle, roleText){
   };
 }
 
+// ---- the worked example -----------------------------------------------------
+// A first-time visitor arrives with nothing to paste and no reason to wait
+// twenty seconds for a model on a machine that is not always on. Worse, when
+// that machine is off they used to get the browser's own words: "Failed to
+// fetch". This is a real saved run - the same input, the same model output -
+// replayed through the same gates in the browser, so the numbers it shows are
+// computed here and now rather than baked in.
+let EXAMPLE = null;
+async function loadExample(){
+  if(EXAMPLE !== null) return EXAMPLE;
+  try{
+    const r = await fetch("example.json?t=" + Date.now(), {cache:"no-store"});
+    if(r.ok) return (EXAMPLE = await r.json());
+  }catch(e){ /* offline, or not published yet */ }
+  return (EXAMPLE = false);
+}
+
+// The browser's network error is not a sentence anybody should have to read.
+function friendly(err){
+  const m = String((err && err.message) || err || "");
+  if(/failed to fetch|networkerror|load failed|err_/i.test(m))
+    return "Could not reach the model — it runs on a machine that is not always on. "
+         + "The worked example still works; it needs nothing.";
+  return m;
+}
+
+async function showExample(){
+  const ex = await loadExample();
+  if(!ex){ status("The worked example could not be loaded.", 1); return; }
+  const map = extractJSON(ex.content);
+  // Straight through the real ranking and signal filtering.
+  renderMap(map, ex.title, ex.role);
+  status(mapStatus(map) + "  ·  worked example, " + ex.caption);
+}
+
+function mapStatus(map){
+  const cut = (map.pools||[]).reduce((n,p)=>n+(p.dropped_signals||[]).length, 0);
+  return `${(map.pools||[]).length} pools.` + (cut
+    ? ` ${cut} signal${cut>1?"s":""} named a category rather than a search term and were left out of the strings.`
+    : "");
+}
+
 async function run(){
   const title = $("#title").value.trim();
   const role  = $("#role").value.trim();
@@ -344,12 +386,9 @@ async function run(){
     const map = extractJSON(await complete(prompt));
     if(!map.pools?.length) throw new Error("No usable pools came back. Try a longer description.");
     renderMap(map, title, role);
-    const cut = map.pools.reduce((n,p)=>n+(p.dropped_signals||[]).length, 0);
-    status(`${map.pools.length} pools.` + (cut
-      ? ` ${cut} signal${cut>1?"s":""} named a category rather than a search term and were left out of the strings.`
-      : ""));
+    status(mapStatus(map));
     remember(title, {title, role, map});
-  }catch(e){ status(e.message, true); }
+  }catch(e){ status(friendly(e), true); }
   finally{ $("#run").disabled = false; }
 }
 
@@ -454,6 +493,10 @@ window.addEventListener("DOMContentLoaded", ()=>{
   document.querySelectorAll("[data-preset]").forEach(b=>b.onclick=e=>{e.preventDefault();applyPreset(b.dataset.preset);});
   // Deliberately does NOT refill the form. The prior run is a chip you can
   // click, not text you have to delete before you can type your own.
+  $("#demo").onclick = showExample;
   drawRecent();
   status("Ready. No key needed \u2014 paste a job description and go.");
+  // A first-time visitor arrives with nothing to paste. Show them a real map
+  // rather than an empty page - it needs no model and no waiting.
+  if(!hist().length) showExample();
 });
