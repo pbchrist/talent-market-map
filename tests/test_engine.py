@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from src.marketmap.closeness import UNRANKED
 from src.marketmap.engine import MapError, generate
 
 BODY = {"core_shape": "building believable real-time systems under limits",
@@ -32,19 +33,24 @@ def test_non_obvious_filters_out_the_pools_everyone_searches():
 def test_the_models_obviousness_is_ignored_entirely():
     # It rated quant risk 4/5 for an AV simulation req and military
     # construction 1/5 for a construction req. Wrong in both directions, so
-    # the number is derived from the titles instead. See obviousness.py.
+    # the number is never the model's. See closeness.py.
     body = {"core_shape": "s", "pools": [
         {"name": "p", "transfer_logic": "l", "titles": ["Pipeline TD"],
          "obviousness": 5, "confidence": 5.0}]}
     p = generate("Simulation Engineer", "x"*50, complete=fake(body)).pools[0]
-    assert p.obviousness == 1          # no shared vocabulary with the role
+    # A lone pool has nothing to be nearer than, so the honest answer is "no
+    # opinion" - which is emphatically not the 5 the model asked for.
+    assert p.obviousness == UNRANKED
     assert p.confidence == 1.0         # confidence is still clamped
 
 
-def test_derived_obviousness_tracks_the_role_title():
+def test_a_synonym_pool_outranks_a_foreign_one():
     body = {"core_shape": "s", "pools": [
-        {"name": "p", "transfer_logic": "l", "titles": ["Simulation Engineer"]}]}
-    assert generate("Simulation Engineer", "x"*50, complete=fake(body)).pools[0].obviousness == 5
+        {"name": "synonym", "transfer_logic": "l", "titles": ["Simulation Developer"]},
+        {"name": "foreign", "transfer_logic": "l", "titles": ["Pipeline TD"]}]}
+    pools = {p.name: p.obviousness for p in
+             generate("Simulation Engineer", "x"*50, complete=fake(body)).pools}
+    assert pools["synonym"] > pools["foreign"]
 
 
 def test_drops_a_pool_with_no_transfer_logic():

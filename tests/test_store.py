@@ -2,8 +2,14 @@ from src.marketmap.engine import generate
 from src.marketmap.store import find, load, save, slug
 import json
 
-BODY = {"core_shape": "s", "pools": [{"name": "p", "transfer_logic": "l",
-        "companies": ["Rockstar"], "titles": ["Pipeline Technical Director"], "obviousness": 1}]}
+# Two pools, because obviousness is now a ranking and a lone pool cannot be
+# ranked against anything - so a one-pool map has no non-obvious pool by
+# construction, which would make this round-trip prove nothing.
+BODY = {"core_shape": "s", "pools": [
+    {"name": "p", "transfer_logic": "l", "companies": ["Rockstar"],
+     "titles": ["Pipeline Technical Director"], "obviousness": 1},
+    {"name": "q", "transfer_logic": "l", "companies": ["Ubisoft"],
+     "titles": ["Simulation Engineer"], "obviousness": 5}]}
 
 
 def test_round_trips(tmp_path):

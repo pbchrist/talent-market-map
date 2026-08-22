@@ -18,9 +18,11 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
+import subprocess                                       # noqa: E402
+
 from src.marketmap import strings                       # noqa: E402
 from src.marketmap.engine import generate               # noqa: E402
-from src.marketmap.obviousness import derive            # noqa: E402
+from src.marketmap.closeness import rank                # noqa: E402
 from src.marketmap.searchable import is_searchable      # noqa: E402
 
 HERE = pathlib.Path(__file__).parent
@@ -59,18 +61,27 @@ SEARCHABLE_CASES = [
     "Systems Engineering", "Python/C++ tooling and pipeline development",
 ]
 
-OBVIOUSNESS_CASES = [
-    ("Senior Simulation Engineer, Autonomous Vehicles",
-     ["Quantitative Risk Analyst", "Model Validation Lead"]),
-    ("Senior Simulation Engineer, Autonomous Vehicles",
-     ["Simulation Developer", "Simulation Specialist"]),
-    ("Construction Project Manager",
-     ["Military Construction Manager", "Construction Engineer", "Facilities Engineer"]),
-    ("Staff Engineer, Payments",
-     ["Ledger Systems Architect", "General Ledger Engineer"]),
-    ("Director of Nursing",
-     ["Director of Clinical Operations", "Regional Clinical Director"]),
-]
+PARITY = json.loads((HERE / "parity-cases.json").read_text())
+
+
+def parity():
+    """The deployed page runs its own copy of these gates. Once already, a fix
+    landed in Python and never reached docs/app.js, and the live page stayed
+    wrong for hours with every test green. This compares the two directly."""
+    py = {
+        "searchable": {s: is_searchable(s) for s in PARITY["searchable"]},
+        "rank": {c["id"]: rank(c["role_title"], c["role_text"], c["pools"])
+                 for c in PARITY["rank"]},
+    }
+    try:
+        js = json.loads(subprocess.run(
+            ["node", str(HERE / "parity.js")], capture_output=True, text=True,
+            timeout=60, check=True).stdout)
+    except Exception as exc:
+        return [("node could not run", "-", str(exc)[:80])]
+    return [(f"{sec}.{k}", v, js.get(sec, {}).get(k))
+            for sec in py for k, v in py[sec].items()
+            if v != js.get(sec, {}).get(k)]
 
 
 def measure():
@@ -86,8 +97,8 @@ def measure():
             } for p in m.pools
         },
         "searchable": {s: is_searchable(s) for s in SEARCHABLE_CASES},
-        "obviousness": {f"{t} || {'/'.join(ti)}": derive(t, ti)
-                        for t, ti in OBVIOUSNESS_CASES},
+        "rank": {c["id"]: rank(c["role_title"], c["role_text"], c["pools"])
+                 for c in PARITY["rank"]},
     }
 
 
@@ -111,8 +122,17 @@ def main():
     was, isnow = flatten(json.loads(BASELINE.read_text())), flatten(now)
     diffs = [(k, was.get(k), isnow.get(k))
              for k in sorted(set(was) | set(isnow)) if was.get(k) != isnow.get(k)]
+    drift = parity()
+    if drift:
+        print(f"talent-market-map   PYTHON AND JAVASCRIPT DISAGREE  ({len(drift)})\n")
+        for k, a, b in drift:
+            print(f"  {k}\n      python: {a}\n      js    : {b}")
+        print("\nThe deployed page is the JavaScript. Fix docs/app.js.")
+        return 1
+
     if not diffs:
-        print(f"talent-market-map   SAME as known good  ({len(isnow)} checks)")
+        print(f"talent-market-map   SAME as known good  "
+              f"({len(isnow)} checks, python and js agree)")
         return 0
     print(f"talent-market-map   CHANGED  ({len(diffs)} of {len(isnow)} checks differ)\n")
     for k, a, b in diffs:

@@ -151,37 +151,55 @@ function extractJSON(text){
 const OBV_STOP = new Set(["a","an","and","at","by","for","from","in","of","on",
   "or","the","to","with","senior","staff","principal","lead","head","chief",
   "director","manager","vp","president","engineer","specialist","analyst",
-  "associate","consultant","i","ii","iii","iv","jr","sr"]);
+  "associate","consultant","operations","operation","services","service",
+  "solutions","platform","systems","system","group","team","regional",
+  "district","area","global","national","developer","architect","coordinator",
+  "supervisor","officer","executive","general","technician","administrator",
+  "representative","i","ii","iii","iv","jr","sr"]);
+
+const UNRANKED = 3;   // "no opinion" - not "average"
 
 function obvWords(text){
   return new Set((String(text||"").toLowerCase().match(/[a-z0-9+#]+/g)||[])
     .filter(w => !OBV_STOP.has(w) && w.length > 2));
 }
 
-// 1 = almost nobody searches here, 5 = everybody starts here. Measured from
-// the title's side: how much of what these people call themselves is
-// vocabulary the recruiter is already typing.
-function deriveObviousness(roleTitle, titles){
+// 0..1: how much of what these people call themselves is language the
+// recruiter is already steeped in. Reads the whole role, not just the title -
+// "Staff Engineer, Payments" never says "ledger", but the job description
+// does, and that is why the title-only version could not see that core
+// banking sits next door.
+function closeness(roleTitle, roleText, titles){
   const list = (titles||[]).filter(x => x && String(x).trim());
-  if(!list.length) return 3;
-  const role = obvWords(roleTitle);
-  if(!role.size) return 3;
+  if(!list.length) return 0;
+  const vocab = new Set([...obvWords(roleTitle), ...obvWords(roleText)]);
+  if(!vocab.size) return 0;
   const scores = [];
   for(const t of list){
     const tw = obvWords(t);
     if(!tw.size) continue;
-    let hit = 0; tw.forEach(w => { if(role.has(w)) hit++; });
+    let hit = 0; tw.forEach(w => { if(vocab.has(w)) hit++; });
     scores.push(hit / tw.size);
   }
-  if(!scores.length) return 3;
+  if(!scores.length) return 0;
   // Mean, not max: one generically-named title should not make a whole pool
-  // look obvious.
-  const best = scores.reduce((a,b)=>a+b,0) / scores.length;
-  if(best >= 0.75) return 5;
-  if(best >= 0.45) return 4;
-  if(best >= 0.25) return 3;
-  if(best > 0) return 2;
-  return 1;
+  // look like home turf.
+  return scores.reduce((a,b)=>a+b,0) / scores.length;
+}
+
+// 5 = closest pool in THIS map, 1 = furthest. Ranked rather than scored,
+// because an absolute number shipped once and came back all-1 on a payments
+// map and all-4 on a pharmacist map. Ties share a number; a map with nothing
+// to separate returns UNRANKED throughout rather than inventing an order.
+function rankPools(roleTitle, roleText, poolTitles){
+  const pools = poolTitles || [];
+  if(pools.length < 2) return pools.map(()=>UNRANKED);
+  const raw = pools.map(t => closeness(roleTitle, roleText, t));
+  const tiers = [...new Set(raw)].sort((a,b)=>b-a);
+  if(tiers.length === 1) return pools.map(()=>UNRANKED);
+  const step = 4 / (tiers.length - 1);
+  const band = new Map(tiers.map((s,i)=>[s, Math.round(5 - i*step)]));
+  return raw.map(r => band.get(r));
 }
 
 const SIG_CATEGORY = new Set(["real","time","digital","analog","systems",
@@ -223,13 +241,18 @@ function keepSignals(signals){
   return {kept, dropped: all.filter(s => !kept.includes(s))};
 }
 
-function normalizePool(p, roleTitle){
+function normalizePool(p){
   const {kept, dropped} = keepSignals(p.signals);
-  return Object.assign({}, p, {
-    obviousness: deriveObviousness(roleTitle, p.titles),
-    signals: kept,
-    dropped_signals: dropped,
-  });
+  return Object.assign({}, p, {signals: kept, dropped_signals: dropped});
+}
+
+// What the badge says. The number is a position among these pools, so the
+// label must not imply a universal scale.
+function nearLabel(n, ranked){
+  if(!ranked) return "not ranked";
+  if(n === 5) return "closest in this map";
+  if(n === 1) return "furthest in this map";
+  return `${n}/5 near your search`;
 }
 
 function poolCard(p, i){
@@ -240,7 +263,7 @@ function poolCard(p, i){
     <div class="phead">
       <span class="rank">${String(i+1).padStart(2,"0")}</span>
       <h3></h3>
-      <span class="pill ${obv<=2?"rare":""}">obviousness ${obv}/5</span>
+      <span class="pill ${obv<=2?"rare":""}">${nearLabel(obv, p._ranked)}</span>
     </div>
     <p class="why"></p>
     <div class="rows">
@@ -279,19 +302,23 @@ function copy(btn, text){
   if(navigator.clipboard) navigator.clipboard.writeText(text).then(done, done); else done();
 }
 
-function renderMap(map, roleTitle){
+function renderMap(map, roleTitle, roleText){
   const out = $("#out"); out.innerHTML="";
   const shape = document.createElement("div"); shape.className="shape";
   shape.innerHTML = `<span class="lbl">The capability under the title</span><p></p>`;
   shape.querySelector("p").textContent = map.core_shape || "";
   out.appendChild(shape);
 
-  const pools = (map.pools||[]).map(p => normalizePool(p, roleTitle))
-    .sort((a,b)=>(a.obviousness??3)-(b.obviousness??3));
+  const pools = (map.pools||[]).map(normalizePool);
+  const ranks = rankPools(roleTitle, roleText || "", pools.map(p => p.titles));
+  const ranked = new Set(ranks).size > 1;
+  pools.forEach((p,i) => { p.obviousness = ranks[i]; p._ranked = ranked; });
+  pools.sort((a,b)=>(a.obviousness??3)-(b.obviousness??3));
   map.pools = pools;   // so the status line and storage see what was rendered
   const bar = document.createElement("div"); bar.className="bar";
   bar.innerHTML = `<span>${pools.length} pools for <b></b></span>
-    <label class="tog"><input type="checkbox" id="hideobv"> hide the obvious ones</label>`;
+    <label class="tog"><input type="checkbox" id="hideobv"> hide the closest ones</label>
+    <span class="legend">ranked against the other pools in this map, not the whole market</span>`;
   bar.querySelector("b").textContent = roleTitle;
   out.appendChild(bar);
 
@@ -316,12 +343,12 @@ async function run(){
     const prompt = `ROLE TITLE: ${title}\n\nROLE DESCRIPTION:\n${role}\n\nMap the market. Skip the obvious pools.`;
     const map = extractJSON(await complete(prompt));
     if(!map.pools?.length) throw new Error("No usable pools came back. Try a longer description.");
-    renderMap(map, title);
+    renderMap(map, title, role);
     const cut = map.pools.reduce((n,p)=>n+(p.dropped_signals||[]).length, 0);
     status(`${map.pools.length} pools.` + (cut
       ? ` ${cut} signal${cut>1?"s":""} named a category rather than a search term and were left out of the strings.`
       : ""));
-    remember(title, {title, map});
+    remember(title, {title, role, map});
   }catch(e){ status(e.message, true); }
   finally{ $("#run").disabled = false; }
 }
@@ -412,7 +439,7 @@ document.addEventListener("pointerdown", e => {
 
 function replay(e){
   // Renders only. The input boxes are never written to.
-  renderMap(e.payload.map, e.payload.title);
+  renderMap(e.payload.map, e.payload.title, e.payload.role || "");
   status("Showing a prior map. The boxes above are still yours.");
 }
 

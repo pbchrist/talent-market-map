@@ -1,0 +1,23 @@
+{
+  "searchable": ["Real-Time Digital Audio", "Houdini", "OpenUSD", "ROS2", "C++",
+                 "ARINC 653 partitioning", "Unreal Engine", "Project Controls",
+                 "Systems Engineering", "Python/C++ tooling and pipeline development"],
+  "rank": [
+    {"id": "payments",
+     "role_title": "Staff Engineer, Payments",
+     "role_text": "Own the double-entry ledger recording every movement of money. Idempotency and reconciliation for payment flows that must balance to the cent across retries, partial failures and third-party processor outages.",
+     "pools": [["Ledger Systems Architect", "General Ledger Engineer", "Core Banking Platform Developer"],
+               ["Revenue Integrity Engineer", "Fare Reconciliation Developer", "Ticketing Systems Architect"],
+               ["Billing Systems Engineer", "Rating Engine Developer", "Mediation Systems Analyst"]]},
+    {"id": "nursing",
+     "role_title": "Director of Nursing",
+     "role_text": "Lead clinical operations for a 200-bed skilled nursing facility. Survey readiness and regulatory compliance, nurse staffing ratios across three shifts, infection control, retention of an RN and CNA workforce.",
+     "pools": [["Director of Clinical Operations", "Regional Clinical Director", "VP of Clinical Services"],
+               ["Regional Operations Manager", "District Manager", "Quality & Compliance Manager"],
+               ["Store Operations Manager", "Logistics Center Manager", "Workforce Planning Manager"]]},
+    {"id": "single-pool", "role_title": "Staff Engineer, Payments", "role_text": "ledger",
+     "pools": [["Ledger Systems Architect"]]},
+    {"id": "all-tied", "role_title": "Staff Engineer, Payments", "role_text": "ledger",
+     "pools": [["Zebra Handler"], ["Kite Folder"]]}
+  ]
+}

@@ -1,11 +1,4 @@
 {
-  "obviousness": {
-    "Construction Project Manager || Military Construction Manager/Construction Engineer/Facilities Engineer": 4,
-    "Director of Nursing || Director of Clinical Operations/Regional Clinical Director": 1,
-    "Senior Simulation Engineer, Autonomous Vehicles || Quantitative Risk Analyst/Model Validation Lead": 1,
-    "Senior Simulation Engineer, Autonomous Vehicles || Simulation Developer/Simulation Specialist": 5,
-    "Staff Engineer, Payments || Ledger Systems Architect/General Ledger Engineer": 1
-  },
   "pipeline": {
     "Airline Revenue Integrity": {
       "boolean": "(\"Revenue Integrity Engineer\" OR \"Fare Reconciliation Developer\") AND (Sabre OR Amadeus)",
@@ -23,7 +16,7 @@
       "dropped_signals": [
         "Real-Time Digital Audio"
       ],
-      "obviousness": 1,
+      "obviousness": 5,
       "signals": [
         "Temenos",
         "GL Reconciliation"
@@ -33,12 +26,31 @@
     "Payments Synonyms": {
       "boolean": "(\"Payments Engineer\" OR \"Payments Platform Developer\") AND Stripe",
       "dropped_signals": [],
-      "obviousness": 4,
+      "obviousness": 5,
       "signals": [
         "Houdini"
       ],
       "xray": "site:linkedin.com/in (\"Payments Engineer\" OR \"Payments Platform Developer\") Stripe Houdini"
     }
+  },
+  "rank": {
+    "all-tied": [
+      3,
+      3
+    ],
+    "nursing": [
+      5,
+      3,
+      1
+    ],
+    "payments": [
+      5,
+      3,
+      1
+    ],
+    "single-pool": [
+      3
+    ]
   },
   "searchable": {
     "ARINC 653 partitioning": true,
