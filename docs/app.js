@@ -321,7 +321,7 @@ async function run(){
     status(`${map.pools.length} pools.` + (cut
       ? ` ${cut} signal${cut>1?"s":""} named a category rather than a search term and were left out of the strings.`
       : ""));
-    localStorage.setItem("tmm.last", JSON.stringify({title, map}));
+    remember(title, {title, map});
   }catch(e){ status(e.message, true); }
   finally{ $("#run").disabled = false; }
 }
@@ -339,6 +339,83 @@ function applyPreset(name){
   if(!p.key) $("#key").value = "";
 }
 
+const HKEY = "tmm.history";
+
+// ---- kinematic feel ---------------------------------------------------------
+// A synthesized click rather than an audio file: nothing to load, nothing for
+// the CSP to block, and it stays in step with the press animation. Two
+// transients ~12ms apart read as a switch closing; one alone reads as a beep.
+let AC = null;
+let SOUND = localStorage.getItem("ui.sound") !== "off";
+const QUIET = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function tick(){
+  if(!SOUND || QUIET()) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === "suspended") AC.resume();
+    const t = AC.currentTime;
+    for(const [at, freq, gain] of [[0, 1850, 0.055], [0.012, 1120, 0.03]]){
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type = "square";
+      o.frequency.setValueAtTime(freq, t + at);
+      g.gain.setValueAtTime(gain, t + at);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + at + 0.028);
+      o.connect(g); g.connect(AC.destination);
+      o.start(t + at); o.stop(t + at + 0.035);
+    }
+  }catch(e){ /* no audio on this device - the press animation still lands */ }
+}
+
+// ---- prior searches ---------------------------------------------------------
+// Kept OUT of the input boxes on purpose. Restoring the last run into the form
+// meant every new search started by deleting someone else's text.
+const HMAX = 8;
+function hist(){ try{ return JSON.parse(localStorage.getItem(HKEY)) || []; }catch{ return []; } }
+function remember(label, payload){
+  const h = hist().filter(e => e.label !== label);
+  h.unshift({label, when: Date.now(), payload});
+  try{ localStorage.setItem(HKEY, JSON.stringify(h.slice(0, HMAX))); }
+  catch(e){ /* quota - drop the oldest and try once */
+    try{ localStorage.setItem(HKEY, JSON.stringify(h.slice(0, 3))); }catch(e2){}
+  }
+  drawRecent();
+}
+function drawRecent(){
+  const box = document.getElementById("recent"); if(!box) return;
+  const h = hist();
+  box.innerHTML = "";
+  box.hidden = !h.length;
+  if(!h.length) return;
+  const lbl = document.createElement("span");
+  lbl.className = "rlbl"; lbl.textContent = "Prior searches";
+  box.appendChild(lbl);
+  h.forEach(e => {
+    const c = document.createElement("button");
+    c.type = "button"; c.className = "chip";
+    c.textContent = e.label.length > 46 ? e.label.slice(0, 44) + "…" : e.label;
+    c.title = "Show this again — your boxes stay as they are";
+    c.onclick = () => replay(e);
+    box.appendChild(c);
+  });
+  const clr = document.createElement("button");
+  clr.type = "button"; clr.className = "chip clear"; clr.textContent = "Clear";
+  clr.onclick = () => { localStorage.removeItem(HKEY); drawRecent();
+                        status("Prior searches cleared."); };
+  box.appendChild(clr);
+}
+
+// One handler for the whole page, so anything button-shaped clicks.
+document.addEventListener("pointerdown", e => {
+  if(e.target.closest("button, .chip")) tick();
+}, true);
+
+function replay(e){
+  // Renders only. The input boxes are never written to.
+  renderMap(e.payload.map, e.payload.title);
+  status("Showing a prior map. The boxes above are still yours.");
+}
+
 window.addEventListener("DOMContentLoaded", ()=>{
   $("#run").onclick = run;
   $("#gear").onclick = openSettings;
@@ -348,8 +425,8 @@ window.addEventListener("DOMContentLoaded", ()=>{
     $("#settings").close(); status("Endpoint saved. It stays in this browser.");
   };
   document.querySelectorAll("[data-preset]").forEach(b=>b.onclick=e=>{e.preventDefault();applyPreset(b.dataset.preset);});
-  const last = localStorage.getItem("tmm.last");
-  if(last){ try{ const {title,map}=JSON.parse(last); $("#title").value=title; renderMap(map,title);
-    status("Showing your last map."); }catch{} }
-  else status("Ready. No key needed \u2014 paste a job description and go.");
+  // Deliberately does NOT refill the form. The prior run is a chip you can
+  // click, not text you have to delete before you can type your own.
+  drawRecent();
+  status("Ready. No key needed \u2014 paste a job description and go.");
 });
