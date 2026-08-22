@@ -1,0 +1,55 @@
+{
+  "obviousness": {
+    "Construction Project Manager || Military Construction Manager/Construction Engineer/Facilities Engineer": 4,
+    "Director of Nursing || Director of Clinical Operations/Regional Clinical Director": 1,
+    "Senior Simulation Engineer, Autonomous Vehicles || Quantitative Risk Analyst/Model Validation Lead": 1,
+    "Senior Simulation Engineer, Autonomous Vehicles || Simulation Developer/Simulation Specialist": 5,
+    "Staff Engineer, Payments || Ledger Systems Architect/General Ledger Engineer": 1
+  },
+  "pipeline": {
+    "Airline Revenue Integrity": {
+      "boolean": "(\"Revenue Integrity Engineer\" OR \"Fare Reconciliation Developer\") AND (Sabre OR Amadeus)",
+      "dropped_signals": [
+        "Systems Engineering"
+      ],
+      "obviousness": 1,
+      "signals": [
+        "Sabre"
+      ],
+      "xray": "site:linkedin.com/in (\"Revenue Integrity Engineer\" OR \"Fare Reconciliation Developer\") (Sabre OR Amadeus) Sabre"
+    },
+    "Core Banking Ledger": {
+      "boolean": "(\"Ledger Systems Architect\" OR \"General Ledger Engineer\") AND (Temenos OR Finastra)",
+      "dropped_signals": [
+        "Real-Time Digital Audio"
+      ],
+      "obviousness": 1,
+      "signals": [
+        "Temenos",
+        "GL Reconciliation"
+      ],
+      "xray": "site:linkedin.com/in (\"Ledger Systems Architect\" OR \"General Ledger Engineer\") (Temenos OR Finastra) (Temenos OR \"GL Reconciliation\")"
+    },
+    "Payments Synonyms": {
+      "boolean": "(\"Payments Engineer\" OR \"Payments Platform Developer\") AND Stripe",
+      "dropped_signals": [],
+      "obviousness": 4,
+      "signals": [
+        "Houdini"
+      ],
+      "xray": "site:linkedin.com/in (\"Payments Engineer\" OR \"Payments Platform Developer\") Stripe Houdini"
+    }
+  },
+  "searchable": {
+    "ARINC 653 partitioning": true,
+    "C++": true,
+    "Houdini": true,
+    "OpenUSD": true,
+    "Project Controls": true,
+    "Python/C++ tooling and pipeline development": false,
+    "ROS2": true,
+    "Real-Time Digital Audio": false,
+    "Systems Engineering": false,
+    "Unreal Engine": true
+  }
+}
