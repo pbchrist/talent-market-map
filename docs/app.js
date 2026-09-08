@@ -74,12 +74,21 @@ function booleanStr(p){ return [orGroup(p.titles), orGroup(p.companies)].filter(
 
 // ---- where the hosted model actually is -------------------------------------
 // The public address is a Tailscale Funnel on a stable hostname, served under
-// /model by bridge/bridge.py. It replaced a Cloudflare quick tunnel, which got
-// a brand-new random hostname every time cloudflared restarted -- so the
-// address here went stale and the app spent weeks pointed at a host that no
-// longer resolved, telling everyone the machine was asleep. endpoint.json
-// beside this file still wins, so the address can move without a deploy. The
-// constant above is only the fallback for when that file is missing.
+// /model by bridge/bridge.py. It replaced a Cloudflare quick tunnel, whose
+// hostname was gone the moment cloudflared restarted -- so an address written
+// here went stale, and this app spent two weeks pointed at a host that no
+// longer resolved, telling everybody the machine was asleep. The machine was
+// awake the whole time.
+//
+// endpoint.json beside this file still wins, so the address can move without a
+// deploy. The constant above is the fallback for when that file is missing or
+// names a host that cannot be trusted to still exist.
+//
+// Any address on a quick tunnel is a snapshot with an expiry date, wherever it
+// arrived from. Nothing downstream gets to trust one -- not endpoint.json, not
+// a saved setting.
+const isEphemeralHost = u => /\.trycloudflare\.com/.test(u);
+
 let RESOLVED_URL = null;
 async function hostedURL(fallback){
   if(RESOLVED_URL) return RESOLVED_URL;
@@ -87,7 +96,11 @@ async function hostedURL(fallback){
     const r = await fetch("endpoint.json?t=" + Date.now(), {cache:"no-store"});
     if(r.ok){
       const d = await r.json();
-      if(d && typeof d.url === "string" && /^https:\/\//.test(d.url)){
+      // An ephemeral address here is worse than no address: it overrides the
+      // stable fallback below with a host that may already be NXDOMAIN. If a
+      // publisher ever starts pushing quick tunnels again, this ignores them.
+      if(d && typeof d.url === "string" && /^https:\/\//.test(d.url)
+         && !isEphemeralHost(d.url)){
         return (RESOLVED_URL = d.url);
       }
     }
@@ -101,7 +114,7 @@ async function hostedURL(fallback){
 // saved one to a dead host forever, which breaks the app worst for the people
 // who opened Settings most.
 async function endpointFor(s, fallback){
-  if(s.url && !/\.trycloudflare\.com/.test(s.url)) return s.url;
+  if(s.url && !isEphemeralHost(s.url)) return s.url;
   return await hostedURL(fallback);
 }
 

@@ -137,7 +137,9 @@ sourcing has always been.
 pytest
 ```
 
-67 tests, fully offline — no test touches the network.
+Fully offline — no test touches the network. One test shells out to `node` to
+run the browser-side endpoint guard in `tests/js/`, and skips itself if node is
+not installed.
 
 ## License
 
