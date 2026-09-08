@@ -5,11 +5,14 @@ const LS = "tmm.settings.v1";
 // Points at a bridge fronting a self-hosted Qwen 3.8. No key, no signup,
 // nothing for a visitor to configure - which is the entire point. Anyone who
 // would rather use their own model changes it in Settings.
-// Deliberately NOT the tailnet hostname. Anyone on the same tailnet resolves
-// that to a 100.x address and Chrome blocks a public page from reaching a
-// private one, so the app worked for strangers and failed for its owner.
-// This resolves to Cloudflare for everybody.
-const FREE = {url:"https://song-pattern-rice-graham.trycloudflare.com/v1/chat/completions",
+// This IS the tailnet hostname, which used to be the wrong answer: anyone on
+// the same tailnet resolves it to a 100.x address, and Chrome blocks a public
+// page from reaching a private one -- so the app worked for strangers and
+// failed for its owner. The bridge now answers preflight with
+// Access-Control-Allow-Private-Network, which is what unblocks that case.
+// Checked from the live page on the owner's own machine with the tailnet up:
+// preflight 204, POST 200, map rendered.
+const FREE = {url:"https://patrick-beastmaster.tailf32530.ts.net/model/v1/chat/completions",
               model:"", key:""};
 
 const PRESETS = {
@@ -68,11 +71,13 @@ function xray(p, site="linkedin.com/in"){
 function booleanStr(p){ return [orGroup(p.titles), orGroup(p.companies)].filter(Boolean).join(" AND "); }
 
 // ---- where the hosted model actually is -------------------------------------
-// The public address is a Cloudflare quick tunnel, and a quick tunnel gets a
-// brand-new random hostname every time cloudflared restarts. The server
-// publishes wherever it currently is to endpoint.json beside this file, and a
-// timer keeps that current. The constant above is only the fallback for when
-// that file is missing.
+// The public address is a Tailscale Funnel on a stable hostname, served under
+// /model by bridge/bridge.py. It replaced a Cloudflare quick tunnel, which got
+// a brand-new random hostname every time cloudflared restarted -- so the
+// address here went stale and the app spent weeks pointed at a host that no
+// longer resolved, telling everyone the machine was asleep. endpoint.json
+// beside this file still wins, so the address can move without a deploy. The
+// constant above is only the fallback for when that file is missing.
 let RESOLVED_URL = null;
 async function hostedURL(fallback){
   if(RESOLVED_URL) return RESOLVED_URL;
