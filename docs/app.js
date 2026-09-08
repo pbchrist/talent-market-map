@@ -8,10 +8,12 @@ const LS = "tmm.settings.v1";
 // This IS the tailnet hostname, which used to be the wrong answer: anyone on
 // the same tailnet resolves it to a 100.x address, and Chrome blocks a public
 // page from reaching a private one -- so the app worked for strangers and
-// failed for its owner. The bridge now answers preflight with
-// Access-Control-Allow-Private-Network, which is what unblocks that case.
-// Checked from the live page on the owner's own machine with the tailnet up:
-// preflight 204, POST 200, map rendered.
+// failed for its owner. It works now. Checked from the live page on the
+// owner's own machine with the tailnet up: preflight 204, POST 200, map
+// rendered. Why it works was not established -- the bridge does send
+// Access-Control-Allow-Private-Network, but narrative-sourcing reaches the
+// same box on /llm without that header, so do not trust that as the reason.
+// If this ever regresses for the owner only, that is the thread to pull.
 const FREE = {url:"https://patrick-beastmaster.tailf32530.ts.net/model/v1/chat/completions",
               model:"", key:""};
 
